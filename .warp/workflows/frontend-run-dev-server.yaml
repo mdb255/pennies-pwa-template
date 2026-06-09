@@ -1,0 +1,9 @@
+---
+name: "Front end: Run local dev server"
+command: npm run dev
+tags:
+  - dev
+  - frontend
+  - "!repo"
+description: Start the Vite dev server (run from front-end/{app-name})
+shells: []

@@ -1,0 +1,9 @@
+---
+name: "API: Run local dev server"
+command: uv run uvicorn app.main:app --reload --app-dir src
+tags:
+  - dev
+  - api
+  - "!repo"
+description: Start the FastAPI dev server with auto-reload (run from back-end/{app-name}-api)
+shells: []

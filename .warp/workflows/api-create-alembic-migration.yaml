@@ -1,0 +1,14 @@
+---
+name: "API: Create Alembic migration"
+command: alembic revision --autogenerate -m "{{message}}"
+tags:
+  - db
+  - migration
+  - api
+  - "!repo"
+description: Generate a new Alembic migration from model changes (run from back-end/{app-name}-api)
+arguments:
+  - name: message
+    description: Migration message
+    default_value: ""
+shells: []

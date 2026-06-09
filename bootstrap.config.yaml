@@ -1,0 +1,14 @@
+# Edit these values, then run: python bootstrap.py [--dry-run]
+
+app:
+  name: my-app          # hyphens preferred — used in dir names, ECR repo, SSM paths
+  api_port: 8000
+
+aws:
+  account_id: "123456789012"
+  region: us-east-1
+  profile: default      # local dev profile only, not used in deployment
+
+python_version: "3.11"
+node_version: "24"
+pnpm_version: "11"

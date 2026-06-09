@@ -1,0 +1,108 @@
+/**
+ * Ionic theme – single source of truth for app colors.
+ * Matches previous MUI theme: primary #6d0fab, secondary #b771e2.
+ */
+:root {
+    /* Primary – #6d0fab */
+    --ion-color-primary: #6d0fab;
+    --ion-color-primary-rgb: 109, 15, 171;
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255, 255, 255;
+    --ion-color-primary-shade: #4a0777;
+    --ion-color-primary-tint: #9c4dd4;
+
+    /* Secondary – #b771e2 */
+    --ion-color-secondary: #b771e2;
+    --ion-color-secondary-rgb: 183, 113, 226;
+    --ion-color-secondary-contrast: #ffffff;
+    --ion-color-secondary-contrast-rgb: 255, 255, 255;
+    --ion-color-secondary-shade: #8a4bb8;
+    --ion-color-secondary-tint: #d4a3f0;
+
+    /* Card subtitle / breed / description – explicit so it matches in IonCard and IonContent */
+    --app-subtitle-color: #666;
+}
+
+/* Override Ionic defaults (display: block) so Tailwind flex utilities work on ion-card-content */
+ion-card-content[class] {
+    display: flex;
+}
+
+/* App bar – white background with black text/icons */
+ion-toolbar {
+    --background: #ffffff;
+    --color: #000000;
+    --border-color: #e0e0e0;
+}
+
+ion-toolbar ion-button,
+ion-toolbar ion-icon,
+ion-toolbar ion-back-button {
+    --color: #000000;
+    color: #000000;
+}
+
+/* Larger icon buttons in toolbar */
+ion-toolbar ion-button {
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --padding-start: 14px;
+    --padding-end: 14px;
+}
+
+ion-toolbar ion-icon {
+    font-size: 26px;
+}
+
+/* Larger toolbar title */
+ion-toolbar ion-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+/* Left-aligned toolbar title: add start padding only when [slot="start"] is present */
+ion-toolbar:not(.toolbar-no-start) ion-title.ion-text-start {
+    padding-inline-start: 3rem;
+}
+
+ion-toolbar.toolbar-no-start ion-title.ion-text-start {
+    padding-inline-start: 1rem;
+}
+
+/* Tab bar – white background with black icons/labels */
+ion-tab-bar {
+    --background: #ffffff;
+    --color: #000000;
+    --color-selected: #6d0fab;
+    --border: 1px solid #e0e0e0;
+}
+
+ion-tab-button {
+    --color: #757575;
+    --color-selected: #6d0fab;
+    transition: background-color 0.2s ease;
+}
+
+ion-tab-bar ion-label {
+    font-size: 0.7rem;
+}
+
+ion-tab-button.tab-selected {
+    font-weight: 600;
+}
+
+/* Fully rounded buttons by default */
+ion-button {
+    --border-radius: 9999px;
+}
+
+/* Extra horizontal padding for primary actions (e.g. Log In) */
+ion-button.extra-px {
+    --padding-start: 30px;
+    --padding-end: 30px;
+}
+
+/* OsIonAlert: button labels not forced to uppercase */
+.os-alert-buttons-normal .alert-button {
+    text-transform: none;
+}

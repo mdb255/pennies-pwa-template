@@ -1,0 +1,21 @@
+/* Play slideshow – swiper pagination dots use primary purple, sit below image */
+.play-slideshow-swiper {
+    --swiper-pagination-color: var(--ion-color-primary);
+    padding-bottom: 2.5rem;
+}
+
+/* Fade transition for route changes */
+.route-transition,
+.route-transition-enter {
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

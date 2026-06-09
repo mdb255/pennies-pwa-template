@@ -1,0 +1,7 @@
+/* Theme bridge: Tailwind semantic colors reference Ionic CSS variables (from ionic-theme.css) */
+@theme {
+    --color-primary: var(--ion-color-primary);
+    --color-primary-contrast: var(--ion-color-primary-contrast);
+    --color-secondary: var(--ion-color-secondary);
+    --color-secondary-contrast: var(--ion-color-secondary-contrast);
+}

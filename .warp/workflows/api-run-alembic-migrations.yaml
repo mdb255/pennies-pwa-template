@@ -1,0 +1,10 @@
+---
+name: "API: Run Alembic migrations"
+command: uv run alembic upgrade head
+tags:
+  - db
+  - migration
+  - api
+  - "!repo"
+description: Apply all pending Alembic migrations (run from back-end/{app-name}-api)
+shells: []

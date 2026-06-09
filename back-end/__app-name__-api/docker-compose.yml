@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: <{{ app_name_snake }}>_db
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d <{{ app_name_snake }}>_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+volumes:
+  dbdata:
