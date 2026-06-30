@@ -35,6 +35,3 @@
 - AWS ECR
 - AWS S3 / CloudFront (hosting Frontend)
 - AWS SSM (secrets)
-
-## TODO
-- Currently deployed to AWS App Runner — migrate to AWS Lambda with Lambda Web Adapter

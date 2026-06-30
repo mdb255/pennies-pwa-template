@@ -8,7 +8,7 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 
 - **Frontend**: React + TypeScript + Ionic 8 + Tailwind v4 + Redux Toolkit + RTK Query + Vite
 - **Backend**: FastAPI + SQLModel + Postgres + AWS Cognito + uv
-- **Infra**: AWS (App Runner, ECR, S3/CloudFront), GitHub Actions, Terraform
+- **Infra**: AWS (Lambda via Web Adapter, ECR, S3/CloudFront), GitHub Actions, Terraform
 
 ## Getting started
 
@@ -24,7 +24,7 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 | `app_name_snake` | derived from `app_name` | Python package name, DB names, cookie names |
 | `aws_account_id` | `bootstrap.config.yaml → aws.account_id` | IAM policies, ECR URIs |
 | `aws_region` | `bootstrap.config.yaml → aws.region` | all AWS resource references |
-| `api_port` | `bootstrap.config.yaml → app.api_port` | Dockerfile, App Runner config |
+| `api_port` | `bootstrap.config.yaml → app.api_port` | Dockerfile (uvicorn + `AWS_LWA_PORT`) |
 | `python_version` | `bootstrap.config.yaml → python_version` | Dockerfile, pyproject.toml, GHA |
 | `node_version` | `bootstrap.config.yaml → node_version` | GHA workflows |
 | `pnpm_version` | `bootstrap.config.yaml → pnpm_version` | GHA workflows |
@@ -47,7 +47,7 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 
 - [ ] Create an AWS Cognito User Pool; note the Pool ID and App Client ID
 - [ ] Set up a Postgres database (template assumes [Neon](https://neon.tech))
-- [ ] Configure AWS credentials with access to ECR, S3, CloudFront, and App Runner
+- [ ] Configure AWS credentials with access to ECR, S3, CloudFront, and Lambda
 - [ ] Fill in `bootstrap.config.yaml`
 - [ ] Run `python3 bootstrap.py`
 - [ ] Add Cognito and DB credentials to the generated `.env` files (never committed)

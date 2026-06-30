@@ -1,4 +1,4 @@
-name: Deploy Backend to AWS App Runner
+name: Deploy Backend to AWS Lambda
 
 on:
   push:
@@ -54,7 +54,7 @@ jobs:
           "RUNTIME_DB_URL"
           "USER_POOL_ID"
           "APP_CLIENT_ID"
-          "APPRUNNER_SERVICE_ARN"
+          "LAMBDA_FUNCTION_NAME"
         )
         
         for param in "${PARAMS[@]}"; do
@@ -89,22 +89,15 @@ jobs:
         docker buildx build --platform linux/amd64 \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:latest --push .
 
-    # --- Runtime secrets for the App Runner service ---
-    # Use external script to build App Runner configuration with SSM parameter ARNs
-    - name: Build App Runner configuration
+    # --- Deploy the new image to the Lambda function ---
+    # The function and its runtime env vars are provisioned by Terraform; here we only
+    # point the existing function at the freshly pushed image and wait for it to settle.
+    - name: Deploy image to Lambda
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        bash .github/scripts/build-apprunner-config.sh \
-          "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest" \
-          "/<{{ app_name }}>/prod" \
-          > source-config.json
-
-    - name: Update App Runner service
-      run: |
-        aws apprunner update-service \
-          --service-arn "${APPRUNNER_SERVICE_ARN}" \
-          --source-configuration file://source-config.json
-
-    - name: Start deployment
-      run: aws apprunner start-deployment --service-arn "${APPRUNNER_SERVICE_ARN}"
+        aws lambda update-function-code \
+          --function-name "${LAMBDA_FUNCTION_NAME}" \
+          --image-uri "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+        aws lambda wait function-updated --function-name "${LAMBDA_FUNCTION_NAME}"
