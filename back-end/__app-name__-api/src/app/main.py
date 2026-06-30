@@ -12,8 +12,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Todo API",
-        description="A scalable API for managing todos",
+        title="<{{ app_name }}> API",
         version="1.0.0",
         lifespan=lifespan
     )
@@ -38,7 +37,7 @@ def create_app() -> FastAPI:
     @app.get("/")
     def root():
         return {
-            "message": "Welcome to Todo API",
+            "message": "Welcome to the <{{ app_name }}> API",
             "version": "1.0.0",
             "docs": "/docs"
         }

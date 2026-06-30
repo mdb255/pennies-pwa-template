@@ -5,7 +5,7 @@ tags:
   - db
   - migration
   - api
-  - "!repo"
+  - "!!repo"
 description: Generate a new Alembic migration from model changes (run from back-end/{app-name}-api)
 arguments:
   - name: message

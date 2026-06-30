@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -15,9 +16,9 @@ export default defineConfig({
         },
 
         manifest: {
-            name: 'Cat Slideshow Demo',
-            short_name: 'Cat Slideshow',
-            description: 'Cat Slideshow Demo',
+            name: '<{{ app_name }}>',
+            short_name: '<{{ app_name }}>',
+            description: '<{{ app_name }}>',
             theme_color: '#6d0fab',
             background_color: '#6d0fab',
         },
@@ -35,4 +36,9 @@ export default defineConfig({
             type: 'module',
         },
     })],
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        setupFiles: ['./src/test-setup.ts'],
+    },
 })

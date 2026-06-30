@@ -1,6 +1,6 @@
-# Cat Slideshow API
+# Todo API
 
-A scalable FastAPI application for managing cats and slideshows with a clean, modular architecture.
+A FastAPI + SQLModel starter with AWS Cognito authentication and a Todo resource as the baseline CRUD example.
 
 ## Features
 
@@ -9,11 +9,10 @@ A scalable FastAPI application for managing cats and slideshows with a clean, mo
 - **Alembic**: Database migration tool for SQLAlchemy
 - **uv**: Fast Python package installer and resolver
 - **Pytest**: Testing framework with async support
-- **Type hints**: Full type safety throughout the application
-- **Modular Architecture**: Scalable structure for adding new models and features
-- **CRUD Operations**: Base classes for consistent database operations
-- **Relationship Support**: Proper model relationships with foreign keys
-- **AWS Cognito Authentication**: JWT-based authentication with Cognito integration
+- **Ruff**: Linting
+- **Pyright**: Static type checking
+- **AWS Cognito Authentication**: JWT-based authentication with Cognito integration, including a session-resume refresh-token cookie
+- **User-scoped CRUD**: Todos are owned by and scoped to the authenticated user
 
 ## Project Structure
 
@@ -24,35 +23,34 @@ src/
 │   ├── main.py              # FastAPI application
 │   ├── db.py                # Database configuration
 │   ├── settings.py          # Application settings
-│   ├── models/              # SQLModel models
+│   ├── auth.py               # Cognito integration (signup/login/refresh, JWT decoding)
+│   ├── models/               # SQLModel models
 │   │   ├── __init__.py
-│   │   ├── base.py          # Base model classes
-│   │   ├── cat.py           # Cat model
-│   │   └── slideshow.py     # Slideshow model
-│   ├── crud/                # CRUD operations
+│   │   ├── base.py           # Base model classes
+│   │   ├── user.py           # User model
+│   │   └── todo.py           # Todo model
+│   ├── crud/                 # CRUD operations
 │   │   ├── __init__.py
-│   │   ├── base.py          # Base CRUD class
-│   │   ├── cat.py           # Cat CRUD operations
-│   │   └── slideshow.py     # Slideshow CRUD operations
-│   └── api/                 # API routes
+│   │   ├── base.py           # Base CRUD class
+│   │   ├── user.py           # User CRUD operations
+│   │   └── todo.py           # Todo CRUD operations (user-scoped)
+│   └── api/                  # API routes
 │       ├── __init__.py
-│       ├── cats.py          # Cat endpoints
-│       └── slideshows.py    # Slideshow endpoints
-├── alembic/                 # Database migrations
+│       ├── auth.py            # Auth endpoints
+│       └── todos.py           # Todo endpoints
+├── alembic/                  # Database migrations
 │   ├── versions/
 │   ├── env.py
 │   └── script.py.mako
-├── tests/                   # Test files
-│   ├── test_cats.py
-│   └── test_slideshows.py
-└── pyproject.toml           # Project configuration
+└── tests/                    # Test files
+    └── test_todos.py
 ```
 
 ## Quick Start
 
-1. **Start Postgres** (optional, can use SQLite):
+1. **Start Postgres**:
    ```bash
-   docker compose up -d
+   docker compose -f docker-compose.local.yml up -d
    ```
 
 2. **Install dependencies**:
@@ -62,8 +60,6 @@ src/
 
 3. **Set up the database**:
    ```bash
-   # Create and run migrations
-   uv run alembic revision --autogenerate -m "Initial migration"
    uv run alembic upgrade head
    ```
 
@@ -83,60 +79,41 @@ src/
 
 ## API Endpoints
 
-### Query Parameter Examples
+### Auth
+- `POST /auth/signup/` - Register a new user with Cognito
+- `POST /auth/confirm-signup/` - Confirm signup with the emailed verification code
+- `POST /auth/login/` - Authenticate and receive an access token (sets a session-resume cookie)
+- `POST /auth/resume/` - Exchange the session-resume cookie for a fresh access token
+- `POST /auth/logout/` - Clear the session-resume cookie
 
-**Cats API with filtering:**
-- `GET /cats/` - Get all cats
-- `GET /cats/?breed=Persian` - Get Persian cats
-- `GET /cats/?min_age=2&max_age=5` - Get cats between 2-5 years old
-- `GET /cats/?search=fluffy` - Search for cats with "fluffy" in description
-- `GET /cats/?breed=Siamese&skip=10&limit=5` - Get 5 Siamese cats, skipping first 10
-
-### Cats
-- `POST /cats/` - Create a new cat
-- `GET /cats/` - List all cats (with optional query parameters)
-  - `?breed={breed}` - Filter by cat breed
-  - `?min_age={age}&max_age={age}` - Filter by age range
-  - `?search={term}` - Search cats by description
-  - `?skip={number}&limit={number}` - Pagination
-- `GET /cats/{id}` - Get a specific cat
-- `PATCH /cats/{id}` - Update a cat
-- `DELETE /cats/{id}` - Delete a cat
-
-### Slideshows
-- `POST /slideshows/` - Create a new slideshow
-- `GET /slideshows/` - List all slideshows
-- `GET /slideshows/{id}` - Get a specific slideshow
-- `PATCH /slideshows/{id}` - Update a slideshow
-- `DELETE /slideshows/{id}` - Delete a slideshow
-- `GET /slideshows/cat/{cat_id}` - Get slideshows by cat
-- `GET /slideshows/search/{search_term}` - Search slideshows by title
+### Todos
+All todo endpoints require a valid access token and are scoped to the authenticated user.
+- `POST /todos/` - Create a new todo
+- `GET /todos/` - List todos (`?is_completed=`, `?skip=`, `?limit=`)
+- `GET /todos/{todo_id}/` - Get a specific todo
+- `PATCH /todos/{todo_id}/` - Update a todo (title, description, is_completed)
+- `DELETE /todos/{todo_id}/` - Delete a todo
 
 ### System
-- `GET /` - Root endpoint with API information
+- `GET /` - Root endpoint with API info
 - `GET /healthz` - Application health status
 
 ## Models
 
-### Cat
+### User
 - `id`: Primary key
-- `name`: Cat name
-- `breed`: Cat breed (optional)
-- `age`: Cat age (optional)
-- `color`: Cat color (optional)
-- `description`: Cat description (optional)
-- `image_urls`: List of image URLs
-- `created_at`: Creation timestamp
-- `updated_at`: Last update timestamp
+- `email`: User email
+- `cognito_sub`: Cognito subject identifier
+- `name`: Display name
+- `created_at` / `updated_at`: Timestamps
 
-### Slideshow
+### Todo
 - `id`: Primary key
-- `title`: Slideshow title
-- `description`: Slideshow description (optional)
-- `image_urls`: List of image URLs
-- `cat_id`: Foreign key to Cat (optional)
-- `created_at`: Creation timestamp
-- `updated_at`: Last update timestamp
+- `title`: Todo title
+- `description`: Optional description
+- `is_completed`: Completion flag (default `false`)
+- `user_id`: Foreign key to the owning User
+- `created_at` / `updated_at`: Timestamps
 
 ## Development
 
@@ -145,15 +122,14 @@ src/
 uv run pytest
 ```
 
-### Code Formatting
+### Linting
 ```bash
-uv run black .
-uv run isort .
+uv run ruff check .
 ```
 
 ### Type Checking
 ```bash
-uv run mypy .
+uv run pyright
 ```
 
 ## Database Migrations
@@ -175,8 +151,6 @@ uv run alembic downgrade -1
 
 ## Adding New Models
 
-The project is designed to be easily extensible. To add a new model:
-
 1. **Create the model** in `src/app/models/your_model.py`
 2. **Create CRUD operations** in `src/app/crud/your_model.py`
 3. **Create API endpoints** in `src/app/api/your_model.py`
@@ -187,12 +161,11 @@ The project is designed to be easily extensible. To add a new model:
 
 ## Configuration
 
-The application uses environment variables for configuration. Create a `.env` file in the project root (see `env.example` for a template):
-
+The application uses environment variables for configuration. Create a `.env` file in the project root (see `env.example` for a template).
 
 ## Authentication
 
-The API uses AWS Cognito for JWT-based authentication. Some endpoints require a valid access token in the Authorization header.
+The API uses AWS Cognito for JWT-based authentication. Most endpoints require a valid access token in the Authorization header.
 
 ### Required Environment Variables
 
@@ -200,34 +173,19 @@ The API uses AWS Cognito for JWT-based authentication. Some endpoints require a 
 - `APP_CLIENT_ID`: Your Cognito App Client ID
 - `AWS_REGION`: AWS region where your Cognito User Pool is located
 - `JWKS_CACHE_TTL`: Cache TTL for JWKs (optional, defaults to 3600 seconds)
+- `SESSION_RESUME_COOKIE_NAME` / `SESSION_RESUME_COOKIE_TTL`: Refresh-token cookie settings
 
-### Obtaining an Access Token
+### Auth Flow
 
-1. **Set up AWS Cognito User Pool**:
-   - Create a User Pool in AWS Console
-   - Create an App Client
-   - Configure the authentication flow (e.g., USER_PASSWORD_AUTH)
-
-2. **Get access token** using AWS CLI or SDK:
-
-```bash
-aws cognito-idp initiate-auth \
-  --auth-flow USER_PASSWORD_AUTH \
-  --client-id YOUR_APP_CLIENT_ID \
-  --auth-parameters USERNAME=your_username,PASSWORD=your_password
-```
-
-3. **Use the token** in API requests:
-
-```bash
-curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  http://localhost:8000/cat-images/
-```
+1. `POST /auth/signup/` registers the user with Cognito, then `POST /auth/confirm-signup/` confirms with the emailed code.
+2. `POST /auth/login/` authenticates against Cognito, upserts the local `User` row, returns an access token, and sets the session-resume cookie (holds the refresh token).
+3. `POST /auth/resume/` uses the session-resume cookie to silently mint a new access token (e.g. on page reload).
+4. Authenticated requests send the access token as `Authorization: Bearer <token>`.
 
 ## Notes
 - We avoid `create_all()` at runtime; schema is owned by Alembic.
-- Tests still create tables directly against an in-memory SQLite engine.
-- Adminer is available at http://localhost:8080 for quick DB inspection (when using docker-compose).
+- Tests create tables directly against an in-memory SQLite engine.
+- Adminer is available at http://localhost:8080 for quick DB inspection (when using docker-compose.local.yml).
 
 ## License
 

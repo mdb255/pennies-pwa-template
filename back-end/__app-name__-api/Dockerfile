@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:<{{ python_version }}>-slim
 
 WORKDIR /app
 
@@ -15,11 +15,11 @@ COPY src ./src
 # Install dependencies
 RUN uv sync --frozen --no-dev
 
-# Expose port 8000
-EXPOSE 8000
+# Expose port
+EXPOSE <{{ api_port }}>
 
 # Run the application
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "src"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "<{{ api_port }}>", "--app-dir", "src"]
 
 
 

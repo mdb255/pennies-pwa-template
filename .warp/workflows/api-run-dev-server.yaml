@@ -4,6 +4,6 @@ command: uv run uvicorn app.main:app --reload --app-dir src
 tags:
   - dev
   - api
-  - "!repo"
+  - "!!repo"
 description: Start the FastAPI dev server with auto-reload (run from back-end/{app-name}-api)
 shells: []

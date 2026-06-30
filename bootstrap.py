@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["pyyaml", "jinja2"]
+# ///
 """Stamp this template for a new project.
 
 Template files use <{{ variable }}> syntax for Jinja2 expressions.
@@ -6,12 +10,9 @@ That delimiter is safe alongside GHA ${{ }}, Python {}, and YAML.
 
 Folder/file name placeholders use __app-name__ (double-underscore, hyphen inside).
 
-Setup (one time):
-    python3 -m venv .venv && .venv/bin/pip install pyyaml jinja2
-
 Usage:
-    .venv/bin/python bootstrap.py           # apply changes in place
-    .venv/bin/python bootstrap.py --dry-run # preview without writing
+    uv run bootstrap.py           # apply changes in place
+    uv run bootstrap.py --dry-run # preview without writing
 """
 import os
 import sys

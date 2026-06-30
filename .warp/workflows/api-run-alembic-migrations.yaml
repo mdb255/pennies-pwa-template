@@ -5,6 +5,6 @@ tags:
   - db
   - migration
   - api
-  - "!repo"
+  - "!!repo"
 description: Apply all pending Alembic migrations (run from back-end/{app-name}-api)
 shells: []

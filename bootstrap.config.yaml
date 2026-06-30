@@ -9,6 +9,6 @@ aws:
   region: us-east-1
   profile: default      # local dev profile only, not used in deployment
 
-python_version: "3.11"
+python_version: "3.12"
 node_version: "24"
 pnpm_version: "11"

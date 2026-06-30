@@ -14,6 +14,7 @@ services:
       timeout: 3s
       retries: 10
     volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - dbdata:/var/lib/postgresql/data
   adminer:
     image: adminer
