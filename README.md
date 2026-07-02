@@ -13,7 +13,7 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 ## Getting started
 
 1. Edit `bootstrap.config.yaml` with your app name and AWS details
-2. Run `uv run bootstrap.py` — renames directories and substitutes all template placeholders
+2. Run `uv run bootstrap.py` — renames directories and substitutes all template placeholders in place
 3. Follow the READMEs inside the generated `back-end/` and `front-end/` directories for local dev setup
 
 ## Template variables

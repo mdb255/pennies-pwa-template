@@ -2,3 +2,7 @@
 .venv/
 
 **/source-config.json
+
+NEXT-UP.md
+
+docs/plans/
