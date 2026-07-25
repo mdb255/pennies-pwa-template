@@ -6,3 +6,10 @@
 NEXT-UP.md
 
 docs/plans/
+
+# OpenTofu — .terraform.lock.hcl IS committed on purpose (pins provider versions)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+

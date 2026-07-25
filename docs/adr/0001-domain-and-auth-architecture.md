@@ -99,5 +99,5 @@ and device/expiry metadata, all as a row we own.
 ## References
 
 - IETF OAuth WG — *OAuth 2.0 for Browser-Based Applications* (Token-Mediating Backend).
-- Implementation plans: [`docs/plans/tmb-refactor/PLAN.md`](../plans/tmb-refactor/PLAN.md)
-  (app-side, done first), [`docs/plans/iac/PLAN.md`](../plans/iac/PLAN.md) (OpenTofu infra).
+- Implementation plans: [`docs/plans/tmb-refactor-plan.md`](../plans/tmb-refactor-plan.md)
+  (app-side, done first), [`docs/plans/iac-plan.md`](../plans/iac-plan.md) (OpenTofu infra).

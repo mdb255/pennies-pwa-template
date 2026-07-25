@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { IonPage, IonContent, IonItem, IonInput, IonLabel, IonButton, IonSpinner, IonText } from '@ionic/react'
-import { appApi } from '../../rtk/app-api'
+import { authApi } from '../../rtk/auth-api'
 import { setAuthenticated } from '../../rtk/auth/auth-slice'
 import TopNavBar from '../design-system/top-nav-bar'
 
@@ -14,7 +14,7 @@ function LoginScreen() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
 
-    const [login, { isLoading }] = appApi.useLoginMutation()
+    const [login, { isLoading }] = authApi.useLoginMutation()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

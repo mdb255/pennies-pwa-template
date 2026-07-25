@@ -13,7 +13,7 @@ import {
     IonSpinner,
     IonButtons,
 } from '@ionic/react'
-import { appApi } from '../../rtk/app-api'
+import { dataApi } from '../../rtk/data-api'
 import type { TodoCreate, TodoUpdate } from '../../rtk/todos/todo-model'
 import BackButton from '../design-system/back-button'
 import ConfirmCloseDialog from '../reusable/confirm-close-dialog'
@@ -27,11 +27,11 @@ interface EditTodoDialogProps {
 function EditTodoDialog({ open, todoId, onClose }: EditTodoDialogProps) {
     const isEditMode = todoId !== undefined
 
-    const { data: todo, isLoading: isLoadingTodo } = appApi.useGetTodoQuery(todoId!, {
+    const { data: todo, isLoading: isLoadingTodo } = dataApi.useGetTodoQuery(todoId!, {
         skip: !isEditMode,
     })
-    const [createTodo, { isLoading: isCreating }] = appApi.useCreateTodoMutation()
-    const [updateTodo, { isLoading: isUpdating }] = appApi.useUpdateTodoMutation()
+    const [createTodo, { isLoading: isCreating }] = dataApi.useCreateTodoMutation()
+    const [updateTodo, { isLoading: isUpdating }] = dataApi.useUpdateTodoMutation()
 
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')

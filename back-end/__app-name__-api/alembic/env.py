@@ -2,7 +2,7 @@ import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 from alembic import context
 
 # Ensure 'src' is on sys.path so we can import app.*
@@ -27,7 +27,9 @@ config = context.config
 if not settings or not getattr(settings, "migrations_db_url", None):
     raise RuntimeError("MIGRATIONS_DB_URL must be set for Alembic migrations.")
 
-config.set_main_option("sqlalchemy.url", settings.migrations_db_url)
+# NB: do NOT push the URL through config.set_main_option() — Alembic's ConfigParser applies
+# %-interpolation, which chokes on percent-encoded query values (e.g. `search_path%3Dapp`).
+# We pass settings.migrations_db_url directly to SQLAlchemy below instead.
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
@@ -38,7 +40,7 @@ target_metadata = SQLModel.metadata
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode."""
-    url = config.get_main_option("sqlalchemy.url")
+    url = settings.migrations_db_url
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -52,11 +54,7 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Run migrations in 'online' mode."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(settings.migrations_db_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(

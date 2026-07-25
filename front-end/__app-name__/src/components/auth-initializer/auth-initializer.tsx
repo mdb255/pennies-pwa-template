@@ -1,7 +1,7 @@
 import { useEffect, useRef, ReactNode } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { IonSpinner } from '@ionic/react'
-import { appApi } from '../../rtk/app-api'
+import { authApi } from '../../rtk/auth-api'
 import { setAuthenticated, setInitialized, clearAuth } from '../../rtk/auth/auth-slice'
 import { RootState } from '../../rtk/store'
 
@@ -22,7 +22,7 @@ function AuthInitializer({ children }: AuthInitializerProps) {
     const dispatch = useDispatch()
     const { isInitialized } = useSelector((state: RootState) => state.auth)
 
-    const [resume] = appApi.useResumeMutation()
+    const [resume] = authApi.useResumeMutation()
     const hasInitializedRef = useRef(false)
 
     useEffect(() => {

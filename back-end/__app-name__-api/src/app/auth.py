@@ -164,20 +164,21 @@ cognito_client = client('cognito-idp', region_name=settings.aws_region)
 
 
 def get_cookie_kwargs() -> Dict[str, Any]:
-    """Get cookie configuration kwargs based on environment."""
+    """Cookie configuration for the opaque session cookie.
+
+    Host-only (no domain attribute): `/auth/*` is served same-origin with the PWA via
+    CloudFront, so the cookie does not need to span a parent domain like the old
+    cross-site refresh-token cookie did.
+    """
     is_local = settings.app_env == "local"
-    
-    cookie_kwargs = {
+
+    return {
         "httponly": True,
         "secure": not is_local,
         "samesite": "lax",
         "max_age": settings.session_resume_cookie_ttl,
+        "path": "/",
     }
-    
-    if not is_local and settings.app_domain:
-        cookie_kwargs["domain"] = f".{settings.app_domain}"
-    
-    return cookie_kwargs
 
 
 def cognito_signup(email: str, password: str) -> Dict[str, Any]:
@@ -257,6 +258,22 @@ def cognito_refresh_session(refresh_token: str) -> Dict[str, Any]:
         raise HTTPException(
             status_code=401,
             detail=f"Cognito refresh error ({error_code}): {error_message}"
+        )
+
+
+def cognito_revoke(refresh_token: str) -> None:
+    """Revoke a refresh token at Cognito (best-effort; token revocation is enabled)."""
+    try:
+        cognito_client.revoke_token(
+            Token=refresh_token,
+            ClientId=settings.app_client_id,
+        )
+    except ClientError as e:
+        error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+        error_message = e.response.get('Error', {}).get('Message', str(e))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cognito revoke error ({error_code}): {error_message}"
         )
 
 

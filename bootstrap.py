@@ -45,11 +45,12 @@ J2_ENV = Environment(
 
 SKIP_DIRS = {
     '.git', 'node_modules', '.venv', 'dist', '__pycache__',
-    '.pytest_cache', '.mypy_cache', '.ruff_cache',
+    '.pytest_cache', '.mypy_cache', '.ruff_cache', '.terraform',
 }
 SKIP_FILES = {
     'bootstrap.py', 'bootstrap.config.yaml',
     'uv.lock', 'pnpm-lock.yaml', 'LICENSE',
+    '.terraform.lock.hcl',
 }
 
 # Placeholder used in dir/file names (filesystem names can't use <{{ }}>)
@@ -65,6 +66,7 @@ def load_config():
 
 def build_context(c):
     name = c['app']['name']
+    infra = c.get('infra', {})
     return {
         'app_name':       name,
         'app_name_snake': name.replace('-', '_'),
@@ -74,6 +76,10 @@ def build_context(c):
         'python_version': str(c.get('python_version', '3.11')),
         'node_version':   str(c.get('node_version', '24')),
         'pnpm_version':   str(c.get('pnpm_version', '11')),
+        # infra/ (OpenTofu)
+        'root_domain':    infra.get('root_domain', 'example.com'),
+        'github_repo':    infra.get('github_repo', 'my-org/my-repo'),
+        'lambda_memory':  str(infra.get('lambda_memory', 512)),
     }
 
 

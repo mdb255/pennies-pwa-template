@@ -3,6 +3,7 @@
 from .base import BaseModel
 from .todo import Todo, TodoCreate, TodoUpdate, TodoRead
 from .user import User, UserCreate, UserUpdate, UserRead
+from .session import Session
 
 __all__ = [
     "BaseModel",
@@ -14,4 +15,5 @@ __all__ = [
     "UserCreate",
     "UserUpdate",
     "UserRead",
+    "Session",
 ]

@@ -32,3 +32,11 @@ def client():
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def db():
+    """A direct DB session for tests that assert on persisted rows."""
+    engine = get_engine()
+    with Session(engine) as session:
+        yield session

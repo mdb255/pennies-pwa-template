@@ -1,12 +1,13 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { getTodoEndpoints } from './todos/todo-endpoints'
-import { getAuthEndpoints } from './auth/auth-endpoints'
 
-export const appApi = createApi({
-    reducerPath: 'appApi',
+// Cross-origin data API: public Lambda Function URL, authenticated with a Bearer access
+// token. No cookies (credentials: 'omit') — the session cookie belongs to authApi's origin.
+export const dataApi = createApi({
+    reducerPath: 'dataApi',
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_BASE || 'http://localhost:8000',
-        credentials: 'include',
+        credentials: 'omit',
         prepareHeaders: (headers, { getState }) => {
             const token = (getState() as any)?.auth?.accessToken
             if (token) {
@@ -18,6 +19,5 @@ export const appApi = createApi({
     tagTypes: ['Todo'],
     endpoints: (builder) => ({
         ...getTodoEndpoints(builder),
-        ...getAuthEndpoints(builder),
     }),
 })

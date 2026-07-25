@@ -8,7 +8,7 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 
 - **Frontend**: React + TypeScript + Ionic 8 + Tailwind v4 + Redux Toolkit + RTK Query + Vite
 - **Backend**: FastAPI + SQLModel + Postgres + AWS Cognito + uv
-- **Infra**: AWS (Lambda via Web Adapter, ECR, S3/CloudFront), GitHub Actions, Terraform
+- **Infra**: AWS (Lambda via Web Adapter, ECR, S3/CloudFront, Cognito), GitHub Actions, OpenTofu
 
 ## Getting started
 
@@ -28,6 +28,9 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 | `python_version` | `bootstrap.config.yaml → python_version` | Dockerfile, pyproject.toml, GHA |
 | `node_version` | `bootstrap.config.yaml → node_version` | GHA workflows |
 | `pnpm_version` | `bootstrap.config.yaml → pnpm_version` | GHA workflows |
+| `root_domain` | `bootstrap.config.yaml → infra.root_domain` | ACM cert, CloudFront alias, Route53, CORS origin |
+| `github_repo` | `bootstrap.config.yaml → infra.github_repo` | OIDC deploy-role trust policy |
+| `lambda_memory` | `bootstrap.config.yaml → infra.lambda_memory` | both Lambda functions |
 
 ## Directory structure
 
@@ -39,15 +42,22 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 │   └── __app-name__-api/    # FastAPI backend (directory renamed on bootstrap)
 ├── front-end/
 │   └── __app-name__/        # React/Ionic frontend (directory renamed on bootstrap)
+├── infra/                    # OpenTofu — the whole AWS footprint (see infra/README.md)
 ├── docs/                     # Tech decisions and conventions
 └── .github/workflows/        # CI/CD pipelines
 ```
 
 ## Pre-bootstrap checklist
 
-- [ ] Create an AWS Cognito User Pool; note the Pool ID and App Client ID
 - [ ] Set up a Postgres database (template assumes [Neon](https://neon.tech))
-- [ ] Configure AWS credentials with access to ECR, S3, CloudFront, and Lambda
+- [ ] Own a domain with a public Route53 hosted zone — the PWA is served at `app.<root_domain>`
+- [ ] Configure AWS credentials with admin-level access (`infra/` creates IAM roles)
 - [ ] Fill in `bootstrap.config.yaml`
-- [ ] Run `python3 bootstrap.py`
-- [ ] Add Cognito and DB credentials to the generated `.env` files (never committed)
+- [ ] Run `uv run bootstrap.py`
+- [ ] Add DB credentials to the generated `.env` files (never committed)
+
+Cognito is **not** a prerequisite — `infra/` creates the user pool and app client, and writes
+their IDs into the SSM tree and the Lambda environments. Deploying is then:
+
+- [ ] `infra/README.md` — bootstrap state, apply, fill the two SecureString DB URLs
+- [ ] Push to `main` to trigger the backend and frontend workflows

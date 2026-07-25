@@ -19,7 +19,7 @@ import WelcomeScreen from '../welcome-screen/welcome-screen'
 import TodosScreen from '../todos-screen/todos-screen'
 import { RouteTransition } from './route-transition'
 import { clearAuth } from '../../rtk/auth/auth-slice'
-import { appApi } from '../../rtk/app-api'
+import { authApi } from '../../rtk/auth-api'
 import { APP_MENU_ID } from './app-menu-id'
 
 const TABS_CONTENT_ID = 'tabs-content'
@@ -28,7 +28,7 @@ function TabsLayout() {
     const location = useLocation()
     const history = useHistory()
     const dispatch = useDispatch()
-    const [logoutTrigger] = appApi.useLogoutMutation()
+    const [logoutTrigger] = authApi.useLogoutMutation()
 
     const handleLogout = async () => {
         try {

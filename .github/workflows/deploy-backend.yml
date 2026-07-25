@@ -49,12 +49,12 @@ jobs:
       id: ssm
       run: |
         SSM_PREFIX="/<{{ app_name }}>/prod"
+        # RUNTIME_DB_URL is deliberately not fetched here — the functions read it from SSM
+        # themselves at cold start, so CI never needs to handle it.
         PARAMS=(
           "MIGRATIONS_DB_URL"
-          "RUNTIME_DB_URL"
-          "USER_POOL_ID"
-          "APP_CLIENT_ID"
-          "LAMBDA_FUNCTION_NAME"
+          "API_LAMBDA_FUNCTION_NAME"
+          "AUTH_LAMBDA_FUNCTION_NAME"
         )
         
         for param in "${PARAMS[@]}"; do
@@ -62,6 +62,8 @@ jobs:
             --name "${SSM_PREFIX}/${param}" \
             --with-decryption \
             --query 'Parameter.Value' --output text)
+          # Keep connection strings out of the logs if a later step echoes them.
+          echo "::add-mask::${value}"
           echo "${param}=${value}" >> "$GITHUB_ENV"
         done
 
@@ -89,15 +91,27 @@ jobs:
         docker buildx build --platform linux/amd64 \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:latest --push .
 
-    # --- Deploy the new image to the Lambda function ---
-    # The function and its runtime env vars are provisioned by Terraform; here we only
-    # point the existing function at the freshly pushed image and wait for it to settle.
+    # --- Deploy the new image to both Lambda functions ---
+    # The api and auth components are the same image; APP_COMPONENT (set by OpenTofu, in
+    # infra/lambda.tf) decides which routers each one mounts. The functions and their env
+    # vars are owned by OpenTofu — this role can only swap the image.
     - name: Deploy image to Lambda
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        aws lambda update-function-code \
-          --function-name "${LAMBDA_FUNCTION_NAME}" \
-          --image-uri "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-        aws lambda wait function-updated --function-name "${LAMBDA_FUNCTION_NAME}"
+        IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+        for fn in "${API_LAMBDA_FUNCTION_NAME}" "${AUTH_LAMBDA_FUNCTION_NAME}"; do
+          echo "Updating ${fn}..."
+          aws lambda update-function-code \
+            --function-name "${fn}" \
+            --image-uri "${IMAGE_URI}" \
+            --no-cli-pager
+        done
+
+        # Wait only after both updates are in flight, so they settle in parallel.
+        for fn in "${API_LAMBDA_FUNCTION_NAME}" "${AUTH_LAMBDA_FUNCTION_NAME}"; do
+          aws lambda wait function-updated --function-name "${fn}"
+          echo "${fn} updated."
+        done

@@ -16,14 +16,14 @@ import TopNavBar from '../design-system/top-nav-bar'
 import TodoItem from './todo-item'
 import EditTodoDialog from './edit-todo-dialog'
 import DeleteConfirmDialog from '../reusable/delete-confirm-dialog'
-import { appApi } from '../../rtk/app-api'
+import { dataApi } from '../../rtk/data-api'
 import type { Todo } from '../../rtk/todos/todo-model'
 import { APP_MENU_ID } from '../routing/app-menu-id'
 
 function TodosScreen() {
-    const { data: todos, isLoading, error } = appApi.useGetTodosQuery({})
-    const [updateTodo] = appApi.useUpdateTodoMutation()
-    const [deleteTodo] = appApi.useDeleteTodoMutation()
+    const { data: todos, isLoading, error } = dataApi.useGetTodosQuery({})
+    const [updateTodo] = dataApi.useUpdateTodoMutation()
+    const [deleteTodo] = dataApi.useDeleteTodoMutation()
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [todoIdToEdit, setTodoIdToEdit] = useState<number | undefined>(undefined)

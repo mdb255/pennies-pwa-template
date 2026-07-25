@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { IonPage, IonContent, IonItem, IonInput, IonLabel, IonButton, IonSpinner, IonText, IonIcon } from '@ionic/react'
 import { eyeOffOutline, eyeOutline } from 'ionicons/icons'
 import { useHistory } from 'react-router-dom'
-import { appApi } from '../../rtk/app-api'
+import { authApi } from '../../rtk/auth-api'
 import TopNavBar from '../design-system/top-nav-bar'
 
 function SignUpScreen() {
@@ -17,8 +17,8 @@ function SignUpScreen() {
     const [showConfirmPw, setShowConfirmPw] = useState(false)
     const [error, setError] = useState('')
 
-    const [signup, { isLoading: isSigningUp }] = appApi.useSignupMutation()
-    const [confirmSignup, { isLoading: isConfirming }] = appApi.useConfirmSignupMutation()
+    const [signup, { isLoading: isSigningUp }] = authApi.useSignupMutation()
+    const [confirmSignup, { isLoading: isConfirming }] = authApi.useConfirmSignupMutation()
 
     const isValidEmail = (val: string) => /.+@.+\..+/.test(val)
 
