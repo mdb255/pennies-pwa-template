@@ -21,7 +21,11 @@ const authSlice = createSlice({
         setAuthenticated: (state, action: PayloadAction<{ accessToken: string; email?: string }>) => {
             state.isAuthenticated = true
             state.accessToken = action.payload.accessToken
-            state.email = action.payload.email ?? null
+            // Silent token refreshes (see dataApi's reauth wrapper) omit email — keep the
+            // existing one rather than wiping it.
+            if (action.payload.email !== undefined) {
+                state.email = action.payload.email
+            }
         },
         setInitialized: (state) => {
             state.isInitialized = true
