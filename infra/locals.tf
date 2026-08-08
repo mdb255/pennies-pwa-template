@@ -10,9 +10,10 @@ locals {
   github_repo    = "<{{ github_repo }}>"
   lambda_memory  = <{{ lambda_memory }}>
 
-  # The PWA's public hostname. Change the "app" label here if you want a different subdomain;
-  # it flows through ACM, CloudFront aliases, Route53, CORS, and the SSM tree.
-  pwa_host   = "app.${local.root_domain}"
+  # The PWA's public hostname. Keyed by app_name (not a fixed "app" label) so multiple apps
+  # sharing the same root_domain get distinct subdomains instead of colliding on app.<domain>.
+  # Flows through ACM, CloudFront aliases, Route53, CORS, and the SSM tree.
+  pwa_host   = "${local.app_name}.${local.root_domain}"
   pwa_origin = "https://${local.pwa_host}"
 
   ssm_prefix = "/${local.app_name}/prod"
