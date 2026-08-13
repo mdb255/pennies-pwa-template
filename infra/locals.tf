@@ -9,6 +9,16 @@ locals {
   root_domain    = "<{{ root_domain }}>"
   github_repo    = "<{{ github_repo }}>"
   lambda_memory  = <{{ lambda_memory }}>
+  neon_region_id = "<{{ neon_region_id }}>"
+
+  # Matches the postgres image tag in docker-compose.local.yml. Bumping either one without
+  # the other means local dev and Neon are running different major versions.
+  neon_pg_version = 16
+
+  # Temporary role Neon provisions with the project. Only used once, to connect and run
+  # infra/neon-init.sql — the app's real db_owner/svc_user roles come out of that script,
+  # never out of this stack. See neon.tf.
+  neon_bootstrap_role = "${local.app_name_snake}_bootstrap"
 
   # The PWA's public hostname. Keyed by app_name (not a fixed "app" label) so multiple apps
   # sharing the same root_domain get distinct subdomains instead of colliding on app.<domain>.

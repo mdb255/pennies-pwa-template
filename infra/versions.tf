@@ -9,6 +9,10 @@ terraform {
       # unverified against this config — read the provider upgrade guide first.
       version = "~> 5.90"
     }
+    neon = {
+      source  = "kislerdm/neon"
+      version = "~> 0.15"
+    }
   }
 
   # Created once, before the first apply — see infra/README.md ("State bucket bootstrap").

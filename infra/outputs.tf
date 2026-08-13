@@ -38,3 +38,15 @@ output "pwa_bucket" {
 output "cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.pwa.id
 }
+
+output "neon_project_id" {
+  value = neon_project.main.id
+}
+
+# Only used once, to run infra/neon-init.sql (see infra/README.md — "Neon bootstrap").
+# Marked sensitive so it doesn't print during a normal `tofu apply`/`tofu output`; fetch it
+# explicitly with `tofu output -raw neon_bootstrap_connection_uri` when you need it.
+output "neon_bootstrap_connection_uri" {
+  value     = neon_project.main.connection_uri
+  sensitive = true
+}

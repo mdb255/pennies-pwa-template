@@ -80,6 +80,7 @@ def build_context(c):
         'root_domain':    infra.get('root_domain', 'example.com'),
         'github_repo':    infra.get('github_repo', 'my-org/my-repo'),
         'lambda_memory':  str(infra.get('lambda_memory', 512)),
+        'neon_region_id': infra.get('neon_region_id', 'aws-us-east-1'),
     }
 
 

@@ -31,6 +31,7 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 | `root_domain` | `bootstrap.config.yaml → infra.root_domain` | ACM cert, CloudFront alias, Route53, CORS origin |
 | `github_repo` | `bootstrap.config.yaml → infra.github_repo` | OIDC deploy-role trust policy |
 | `lambda_memory` | `bootstrap.config.yaml → infra.lambda_memory` | both Lambda functions |
+| `neon_region_id` | `bootstrap.config.yaml → infra.neon_region_id` | Neon project region |
 
 ## Directory structure
 
@@ -49,15 +50,19 @@ See [docs/tech-stack.md](docs/tech-stack.md) for the full list.
 
 ## Pre-bootstrap checklist
 
-- [ ] Set up a Postgres database (template assumes [Neon](https://neon.tech))
+- [ ] A Neon account and a personal API key (template assumes [Neon](https://neon.tech)),
+      exported as `NEON_API_KEY`
 - [ ] Own a domain with a public Route53 hosted zone — the PWA is served at `app.<root_domain>`
 - [ ] Configure AWS credentials with admin-level access (`infra/` creates IAM roles)
 - [ ] Fill in `bootstrap.config.yaml`
 - [ ] Run `uv run bootstrap.py`
-- [ ] Add DB credentials to the generated `.env` files (never committed)
+- [ ] Add DB credentials to the generated `.env` files (never committed) — for local dev,
+      pointed at the `docker-compose.local.yml` Postgres, not Neon
 
-Cognito is **not** a prerequisite — `infra/` creates the user pool and app client, and writes
-their IDs into the SSM tree and the Lambda environments. Deploying is then:
+Neither Cognito nor the Neon project/database are prerequisites — `infra/` creates both: the
+user pool and app client (writing their IDs into the SSM tree and Lambda environments), and
+the Neon project itself (`neon.tf`). Deploying is then:
 
-- [ ] `infra/README.md` — bootstrap state, apply, fill the two SecureString DB URLs
+- [ ] `infra/README.md` — bootstrap state, apply, run the Neon bootstrap script, fill the two
+      SecureString DB URLs
 - [ ] Push to `main` to trigger the backend and frontend workflows

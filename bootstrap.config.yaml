@@ -14,6 +14,7 @@ infra:
   root_domain: example.com        # Route53 public hosted zone you own; PWA is served at app.<root_domain>
   github_repo: my-org/my-repo     # <org>/<repo> — pins the OIDC deploy-role trust policy
   lambda_memory: 512              # MB, applied to both the api and auth functions
+  neon_region_id: aws-us-east-1   # Neon project region — see https://neon.tech/docs/introduction/regions
 
 python_version: "3.12"
 node_version: "24"

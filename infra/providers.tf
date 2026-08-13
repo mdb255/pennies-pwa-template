@@ -16,3 +16,7 @@ provider "aws" {
     tags = local.tags
   }
 }
+
+# Reads NEON_API_KEY from the environment — no key is ever written into config or state.
+# Generate one at https://console.neon.tech (Account Settings → API Keys).
+provider "neon" {}
