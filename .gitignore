@@ -2,10 +2,13 @@
 .venv/
 
 **/source-config.json
+*.state.json
 
 NEXT-UP.md
 
 docs/plans/
+docs/logs/
+docs/tasks/
 
 # OpenTofu — .terraform.lock.hcl IS committed on purpose (pins provider versions)
 .terraform/

@@ -5,9 +5,12 @@ terraform {
   required_providers {
     aws = {
       source = "hashicorp/aws"
-      # 5.90+ for aws_cognito_user_pool.user_pool_tier. Bumping to 6.x is fine but
-      # unverified against this config — read the provider upgrade guide first.
-      version = "~> 5.90"
+      # 6.28+ for invoked_via_function_url on aws_lambda_permission — required to scope the
+      # lambda:InvokeFunction grant Function URLs need since Oct 2025 (see docs/plans/
+      # aws-provider-6-upgrade-plan.md). Verified against this config on tmpl-test-2: no
+      # breaking changes apply to any of our 22 resource types except additive
+      # `region`/`bucket_region` noise, and `tofu plan` after the bump showed zero diff.
+      version = "~> 6.28"
     }
     neon = {
       source  = "kislerdm/neon"

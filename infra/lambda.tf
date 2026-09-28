@@ -68,6 +68,31 @@ resource "aws_lambda_function_url" "api" {
   }
 }
 
+# authorization_type = "NONE" above only turns off IAM auth on the URL itself — Lambda still
+# requires a resource policy before it'll let anyone invoke it. Without this, every call
+# (including a plain curl) 403s with "Forbidden ... Function URL authorization issues".
+resource "aws_lambda_permission" "api_public_url" {
+  statement_id           = "AllowPublicFunctionUrlInvoke"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.api.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+# Since Oct 2025, AWS requires lambda:InvokeFunction in addition to lambda:InvokeFunctionUrl
+# for every Function URL (existing NONE-auth URLs get a grace period until 2026-11-01, but any
+# newly created URL needs both immediately). invoked_via_function_url scopes the grant to calls
+# made through the Function URL, not the raw Invoke API — see
+# docs/plans/aws-provider-6-upgrade-plan.md for the full diagnosis and why this needed a
+# provider bump (the equivalent condition isn't expressible on provider 5.x).
+resource "aws_lambda_permission" "api_public_url_invoke" {
+  statement_id             = "AllowPublicFunctionUrlInvokeFunction"
+  action                   = "lambda:InvokeFunction"
+  function_name            = aws_lambda_function.api.function_name
+  principal                = "*"
+  invoked_via_function_url = true
+}
+
 # --- auth: IAM-authorized Function URL, reachable only through CloudFront ------------------
 
 resource "aws_lambda_function" "auth" {
@@ -114,4 +139,17 @@ resource "aws_lambda_permission" "auth_from_cloudfront" {
   principal              = "cloudfront.amazonaws.com"
   source_arn             = aws_cloudfront_distribution.pwa.arn
   function_url_auth_type = "AWS_IAM"
+}
+
+# Same Oct-2025 AWS requirement as api_public_url_invoke above. Easy to miss because this URL
+# is IAM-authorized, not public — but AuthType AWS_IAM needs both actions too (see
+# docs/plans/aws-provider-6-upgrade-plan.md), and this path has no test coverage that would
+# have caught the gap since the container never ran until the uv fix shipped.
+resource "aws_lambda_permission" "auth_from_cloudfront_invoke" {
+  statement_id             = "AllowCloudFrontOacInvokeFunction"
+  action                   = "lambda:InvokeFunction"
+  function_name            = aws_lambda_function.auth.function_name
+  principal                = "cloudfront.amazonaws.com"
+  source_arn               = aws_cloudfront_distribution.pwa.arn
+  invoked_via_function_url = true
 }

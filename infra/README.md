@@ -43,7 +43,7 @@ Afterwards, `tofu apply` on its own is all you need.
 cd infra
 
 # 1. One-time: create the state bucket (versioned, encrypted, private).
-./bootstrap-state.sh                # add --profile <name> if not using the default
+./scripts/bootstrap-state.sh        # add --profile <name> if not using the default
 tofu init
 
 # 2. Everything except the Lambdas and CloudFront.
@@ -104,7 +104,7 @@ SVC_USER_PW=$(openssl rand -base64 24)
 psql "$(tofu output -raw neon_bootstrap_connection_uri)" \
   -v db_owner_pw="$DB_OWNER_PW" \
   -v svc_user_pw="$SVC_USER_PW" \
-  -f neon-init.sql
+  -f scripts/neon-init.sql
 
 echo "db_owner:  $DB_OWNER_PW"
 echo "svc_user:  $SVC_USER_PW"

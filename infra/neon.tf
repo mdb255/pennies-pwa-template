@@ -7,7 +7,7 @@
 #
 # So this stack only creates the project, which comes with one throwaway bootstrap role
 # (local.neon_bootstrap_role) that Neon generates a password for regardless — that password
-# does land in state, but it's not a credential the app ever uses. Run infra/neon-init.sql
+# does land in state, but it's not a credential the app ever uses. Run infra/scripts/neon-init.sql
 # once, by hand, connected as that bootstrap role, to create the real roles/schema/grants
 # with passwords that never touch Terraform. See infra/README.md, "Neon bootstrap".
 

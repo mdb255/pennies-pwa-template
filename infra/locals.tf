@@ -16,7 +16,7 @@ locals {
   neon_pg_version = 16
 
   # Temporary role Neon provisions with the project. Only used once, to connect and run
-  # infra/neon-init.sql — the app's real db_owner/svc_user roles come out of that script,
+  # infra/scripts/neon-init.sql — the app's real db_owner/svc_user roles come out of that script,
   # never out of this stack. See neon.tf.
   neon_bootstrap_role = "${local.app_name_snake}_bootstrap"
 

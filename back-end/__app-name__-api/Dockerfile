@@ -27,8 +27,12 @@ RUN uv sync --frozen --no-dev
 # Expose port
 EXPOSE <{{ api_port }}>
 
-# Run the application
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "<{{ api_port }}>", "--app-dir", "src"]
+# Run the application. Calls the venv's uvicorn directly rather than going through
+# `uv run`: uv wants a writable cache under $HOME at startup, and Lambda's filesystem is
+# read-only outside /tmp, so `uv run` exits 2 before uvicorn ever binds a port (the adapter
+# then reports Ready with nothing to proxy to, and every request 502s). The `uv sync` above
+# already installed everything into /app/.venv, so uv has no work to do at runtime anyway.
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "<{{ api_port }}>", "--app-dir", "src"]
 
 
 

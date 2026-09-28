@@ -15,6 +15,8 @@ Usage:
     uv run bootstrap.py --dry-run # preview without writing
 """
 import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -144,6 +146,26 @@ def apply_renames(app_name):
     return renames
 
 
+def relock_uv():
+    """uv.lock is excluded from templating (it's not renderable), so it still
+    pins the pre-bootstrap package name. Regenerate it so `uv sync --frozen`
+    (used in the Dockerfile) doesn't choke on a stale workspace member name."""
+    if shutil.which('uv') is None:
+        print("  WARNING: uv not found on PATH — skipping, run `uv lock` manually")
+        return []
+    relocked = []
+    for lockfile in ROOT.rglob('uv.lock'):
+        if any(part in SKIP_DIRS for part in lockfile.relative_to(ROOT).parts):
+            continue
+        project_dir = lockfile.parent
+        result = subprocess.run(['uv', 'lock'], cwd=project_dir, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"  WARNING: uv lock failed in {project_dir.relative_to(ROOT)}:\n{result.stderr}")
+            continue
+        relocked.append(lockfile.relative_to(ROOT))
+    return relocked
+
+
 def main():
     config = load_config()
     context = build_context(config)
@@ -162,6 +184,15 @@ def main():
     for src, dst in renames:
         print(f"  {src} → {dst}")
     print(f"  ({len(renames)} paths)\n")
+
+    if DRY_RUN:
+        print("Would regenerate uv.lock files (skipped in dry run).\n")
+    else:
+        print("Regenerating uv.lock (pyproject.toml package name changed)...")
+        relocked = relock_uv()
+        for p in sorted(relocked):
+            print(f"  relocked  {p}")
+        print(f"  ({len(relocked)} files)\n")
 
     if DRY_RUN:
         print("Run without --dry-run to apply.")
