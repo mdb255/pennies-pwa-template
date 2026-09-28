@@ -43,6 +43,16 @@ output "neon_project_id" {
   value = neon_project.main.id
 }
 
+# Non-sensitive (host and database name, no credentials) — bootstrap-infra.sh's db phase reads
+# these instead of parsing them out of neon_bootstrap_connection_uri.
+output "neon_database_host" {
+  value = neon_project.main.database_host
+}
+
+output "neon_database_name" {
+  value = neon_project.main.database_name
+}
+
 # Only used once, to run infra/scripts/neon-init.sql (see infra/README.md — "Neon bootstrap").
 # Marked sensitive so it doesn't print during a normal `tofu apply`/`tofu output`; fetch it
 # explicitly with `tofu output -raw neon_bootstrap_connection_uri` when you need it.

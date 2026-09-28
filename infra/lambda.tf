@@ -43,7 +43,7 @@ resource "aws_lambda_function" "api" {
     ignore_changes = [image_uri]
   }
 
-  depends_on = [aws_iam_role_policy.api_ssm]
+  depends_on = [aws_iam_role_policy.api_ssm, terraform_data.seed_image]
 }
 
 resource "aws_cloudwatch_log_group" "api" {
@@ -114,7 +114,7 @@ resource "aws_lambda_function" "auth" {
     ignore_changes = [image_uri]
   }
 
-  depends_on = [aws_iam_role_policy.auth_ssm]
+  depends_on = [aws_iam_role_policy.auth_ssm, terraform_data.seed_image]
 }
 
 resource "aws_cloudwatch_log_group" "auth" {

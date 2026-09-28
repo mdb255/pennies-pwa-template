@@ -4,9 +4,9 @@
 -- variables instead of embedding them, since this file — unlike that one — is meant to hold
 -- real production credentials at the moment it runs, not template placeholders.
 --
--- Idempotent: safe to rerun after a partial failure (apply-infra.sh's step 5 resumes by
--- rerunning this file). Role creation is skipped if the role already exists, keeping its
--- original password rather than the one just passed in.
+-- Idempotent: safe to rerun after a partial failure, and safe to rerun to rotate the two
+-- passwords — role creation is skipped if the role already exists, but the ALTER ROLE below
+-- always sets the password to whatever was just passed in.
 --
 -- Usage:
 --   psql "$(tofu output -raw neon_bootstrap_connection_uri)" \
@@ -15,16 +15,14 @@
 --     -v svc_user_pw="$(openssl rand -base64 24)" \
 --     -f neon-init.sql
 
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '<{{ app_name_snake }}>_db_owner') THEN
-    CREATE ROLE <{{ app_name_snake }}>_db_owner WITH LOGIN PASSWORD :'db_owner_pw';
-  END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '<{{ app_name_snake }}>_svc_user') THEN
-    CREATE ROLE <{{ app_name_snake }}>_svc_user WITH LOGIN PASSWORD :'svc_user_pw';
-  END IF;
-END
-$$;
+-- Passwords are set separately below, via ALTER ROLE, so a rerun updates them even for roles
+-- that already existed.
+SELECT format('CREATE ROLE %I LOGIN', r)
+  FROM unnest(ARRAY['<{{ app_name_snake }}>_db_owner', '<{{ app_name_snake }}>_svc_user']) r
+ WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = r) \gexec
+
+ALTER ROLE <{{ app_name_snake }}>_db_owner PASSWORD :'db_owner_pw';
+ALTER ROLE <{{ app_name_snake }}>_svc_user PASSWORD :'svc_user_pw';
 
 GRANT ALL ON DATABASE <{{ app_name_snake }}>_db TO <{{ app_name_snake }}>_db_owner;
 

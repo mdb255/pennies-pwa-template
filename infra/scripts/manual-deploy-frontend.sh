@@ -2,10 +2,7 @@
 # Manual frontend build + upload + CloudFront invalidation, mirroring what
 # .github/workflows/deploy-frontend.yml does in CI. Use this whenever you need to push a
 # frontend change without going through that workflow — e.g. CI isn't wired up to a real
-# GitHub remote yet, or the workflow hasn't been exercised/trusted yet.
-#
-# Unlike manual-first-deploy.sh (a one-time bootstrap artifact), this is meant to be run
-# repeatedly for as long as you're deploying by hand.
+# GitHub remote yet, or the workflow hasn't been exercised/trusted yet. Safe to run repeatedly.
 #
 # Usage: ./manual-deploy-frontend.sh   (run from anywhere; cds to infra/ itself)
 set -euo pipefail

@@ -86,10 +86,14 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker buildx build --platform linux/amd64 \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --push .
-        docker buildx build --platform linux/amd64 \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest --push .
+        # --provenance=false --sbom=false: buildx's default output is a multi-manifest OCI
+        # image (attestations for provenance/SBOM) that Lambda's container runtime rejects —
+        # the push succeeds but the function fails to update. Built once, tagged twice, so CI
+        # doesn't pay for (or risk drifting between) two separate builds of the same commit.
+        docker buildx build --platform linux/amd64 --provenance=false --sbom=false \
+          -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+          -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest" \
+          --push .
 
     # --- Deploy the new image to both Lambda functions ---
     # The api and auth components are the same image; APP_COMPONENT (set by OpenTofu, in

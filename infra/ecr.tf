@@ -47,3 +47,32 @@ resource "aws_ecr_lifecycle_policy" "api" {
     ]
   })
 }
+
+# Seeds the first image inside this same apply, so a container-image Lambda (lambda.tf) can be
+# created in one `tofu apply` instead of the two-part sequence this used to require (repo →
+# manual `docker push` → everything else). triggers_replace on the repository's id means this
+# only runs once, when the repository is (re)created — later pushes go through CI
+# (.github/workflows/deploy-backend.yml), never through this resource.
+#
+# --provenance=false --sbom=false: buildx's default output is a multi-manifest OCI image
+# (attestations for provenance/SBOM) that Lambda's container runtime rejects. Discovered the
+# hard way against a real Lambda — without these flags the push succeeds but the function
+# fails to update.
+#
+# Runs as whatever AWS credentials `tofu apply` itself runs under (bootstrap-infra.sh exports
+# AWS_PROFILE before calling `tofu apply`) — an admin/human principal, not the CI deploy role.
+resource "terraform_data" "seed_image" {
+  triggers_replace = [aws_ecr_repository.api.id]
+
+  provisioner "local-exec" {
+    working_dir = "${path.module}/../back-end/<{{ app_name }}>-api"
+    interpreter = ["/usr/bin/env", "bash", "-c"]
+    command     = <<-EOT
+      set -euo pipefail
+      aws ecr get-login-password --region ${local.aws_region} \
+        | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${local.aws_region}.amazonaws.com
+      docker buildx build --platform linux/amd64 --provenance=false --sbom=false \
+        -t ${aws_ecr_repository.api.repository_url}:latest --push .
+    EOT
+  }
+}

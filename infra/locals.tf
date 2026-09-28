@@ -1,6 +1,7 @@
-# All configuration for this stack is stamped in by bootstrap.py from bootstrap.config.yaml.
-# There are deliberately no variables and no terraform.tfvars: the template renders once, and
-# the result is a concrete, readable config for exactly one project.
+# All configuration for this stack is stamped in by bootstrap-project.py from
+# bootstrap-project.config.yaml. There are deliberately no variables and no terraform.tfvars:
+# the template renders once, and the result is a concrete, readable config for exactly one
+# project.
 
 locals {
   app_name       = "<{{ app_name }}>"

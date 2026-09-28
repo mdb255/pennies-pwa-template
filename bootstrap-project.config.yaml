@@ -1,0 +1,27 @@
+# Edit these values, then run: uv run bootstrap-project.py [--dry-run]
+#
+# Kept in place after bootstrap runs — re-running this script re-reads it, and a resumed
+# /bootstrap run in an already-rendered project reads it too. All fields below except the
+# tool versions, api_port, lambda_memory and github_visibility are required; bootstrap-project.py
+# refuses to run with any of them missing or malformed rather than silently defaulting.
+
+app:
+  name: my-app          # hyphens preferred — used in dir names, ECR repo, SSM paths
+  api_port: 8000
+
+aws:
+  account_id: "123456789012"
+  region: us-east-1
+  profile: default      # deploy-time profile — bootstrap-infra.sh exports this as AWS_PROFILE
+
+# Infrastructure (infra/ — OpenTofu). See infra/README.md before applying.
+infra:
+  root_domain: example.com        # Route53 public hosted zone you own; PWA is served at <app_name>.<root_domain>
+  github_repo: my-org/my-repo     # <org>/<repo> — pins the OIDC deploy-role trust policy
+  github_visibility: private      # private|public — passed to `gh repo create`
+  lambda_memory: 512              # MB, applied to both the api and auth functions
+  neon_region_id: ""              # Neon project region; blank → aws-<aws.region> — see https://neon.tech/docs/introduction/regions
+
+python_version: "3.12"
+node_version: "24"
+pnpm_version: "11"

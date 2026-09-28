@@ -11,10 +11,11 @@ That delimiter is safe alongside GHA ${{ }}, Python {}, and YAML.
 Folder/file name placeholders use __app-name__ (double-underscore, hyphen inside).
 
 Usage:
-    uv run bootstrap.py           # apply changes in place
-    uv run bootstrap.py --dry-run # preview without writing
+    uv run bootstrap-project.py           # apply changes in place
+    uv run bootstrap-project.py --dry-run # preview without writing
 """
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -48,9 +49,10 @@ J2_ENV = Environment(
 SKIP_DIRS = {
     '.git', 'node_modules', '.venv', 'dist', '__pycache__',
     '.pytest_cache', '.mypy_cache', '.ruff_cache', '.terraform',
+    '.claude',
 }
 SKIP_FILES = {
-    'bootstrap.py', 'bootstrap.config.yaml',
+    'bootstrap-project.py', 'bootstrap-project.config.yaml',
     'uv.lock', 'pnpm-lock.yaml', 'LICENSE',
     '.terraform.lock.hcl',
 }
@@ -58,31 +60,75 @@ SKIP_FILES = {
 # Placeholder used in dir/file names (filesystem names can't use <{{ }}>)
 NAME_PLACEHOLDER = '__app-name__'
 
+APP_NAME_RE = re.compile(r'[a-z][a-z0-9-]*')
+ACCOUNT_ID_RE = re.compile(r'\d{12}')
+GITHUB_REPO_RE = re.compile(r'[^/\s]+/[^/\s]+')
+
 
 def load_config():
-    p = ROOT / 'bootstrap.config.yaml'
+    p = ROOT / 'bootstrap-project.config.yaml'
     if not p.exists():
         sys.exit(f"Config not found: {p}")
     return yaml.safe_load(p.read_text())
 
 
+def validate_config(c):
+    """No silent defaults for project decisions — a wrong value here (wrong region, wrong
+    account) is expensive to unwind once real infra exists, so every one of these is required
+    and checked rather than quietly defaulted."""
+    app = c.get('app') or {}
+    aws = c.get('aws') or {}
+    infra = c.get('infra') or {}
+    errors = []
+
+    name = app.get('name')
+    if not name or not APP_NAME_RE.fullmatch(name):
+        errors.append("app.name is required and must match ^[a-z][a-z0-9-]*$")
+
+    account_id = aws.get('account_id')
+    if not account_id or not ACCOUNT_ID_RE.fullmatch(str(account_id)):
+        errors.append("aws.account_id is required and must be exactly 12 digits")
+
+    if not aws.get('region'):
+        errors.append("aws.region is required")
+
+    github_repo = infra.get('github_repo')
+    if not github_repo or not GITHUB_REPO_RE.fullmatch(github_repo):
+        errors.append("infra.github_repo is required and must be 'owner/repo'")
+
+    if not infra.get('root_domain'):
+        errors.append("infra.root_domain is required")
+
+    visibility = infra.get('github_visibility', 'private')
+    if visibility not in ('private', 'public'):
+        errors.append("infra.github_visibility must be 'private' or 'public'")
+
+    if errors:
+        sys.exit("Config errors in bootstrap-project.config.yaml:\n" + "\n".join(f"  - {e}" for e in errors))
+
+
 def build_context(c):
     name = c['app']['name']
+    aws = c['aws']
     infra = c.get('infra', {})
     return {
-        'app_name':       name,
-        'app_name_snake': name.replace('-', '_'),
-        'aws_account_id': str(c['aws']['account_id']),
-        'aws_region':     c['aws']['region'],
-        'api_port':       str(c['app'].get('api_port', 8000)),
-        'python_version': str(c.get('python_version', '3.11')),
-        'node_version':   str(c.get('node_version', '24')),
-        'pnpm_version':   str(c.get('pnpm_version', '11')),
+        'app_name':          name,
+        'app_name_snake':    name.replace('-', '_'),
+        'aws_account_id':    str(aws['account_id']),
+        'aws_region':        aws['region'],
+        # Deploy-time profile — bootstrap-infra.sh exports this as AWS_PROFILE. Not used by
+        # the running app; local dev auth is up to whatever's already active in your shell.
+        'aws_profile':       aws.get('profile', 'default'),
+        'api_port':          str(c['app'].get('api_port', 8000)),
+        'python_version':    str(c.get('python_version', '3.12')),
+        'node_version':      str(c.get('node_version', '24')),
+        'pnpm_version':      str(c.get('pnpm_version', '11')),
         # infra/ (OpenTofu)
-        'root_domain':    infra.get('root_domain', 'example.com'),
-        'github_repo':    infra.get('github_repo', 'my-org/my-repo'),
-        'lambda_memory':  str(infra.get('lambda_memory', 512)),
-        'neon_region_id': infra.get('neon_region_id', 'aws-us-east-1'),
+        'root_domain':       infra['root_domain'],
+        'github_repo':       infra['github_repo'],
+        'github_visibility': infra.get('github_visibility', 'private'),
+        'lambda_memory':     str(infra.get('lambda_memory', 512)),
+        'neon_region_id':    infra.get('neon_region_id') or f"aws-{aws['region']}",
     }
 
 
@@ -168,6 +214,7 @@ def relock_uv():
 
 def main():
     config = load_config()
+    validate_config(config)
     context = build_context(config)
 
     if DRY_RUN:
@@ -197,10 +244,11 @@ def main():
     if DRY_RUN:
         print("Run without --dry-run to apply.")
     else:
-        print("Done. Suggested next steps:")
+        print("Done. bootstrap-project.config.yaml is kept in place — re-running this script")
+        print("reads it again, and it's how a resumed /bootstrap run finds its config.")
+        print("Suggested next steps:")
         print("  git add -A")
         print("  git commit -m 'Initialize from template'")
-        print("  # Optional: delete bootstrap.py and bootstrap.config.yaml")
 
 
 if __name__ == '__main__':

@@ -2,7 +2,6 @@
 .venv/
 
 **/source-config.json
-*.state.json
 
 NEXT-UP.md
 
@@ -15,4 +14,6 @@ docs/tasks/
 *.tfstate
 *.tfstate.*
 *.tfplan
+
+infra/.bootstrap-infra-logs/
 

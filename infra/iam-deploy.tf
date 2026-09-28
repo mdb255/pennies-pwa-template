@@ -104,15 +104,15 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["${aws_s3_bucket.pwa.arn}/*"]
   }
 
-  # Scoped to the account rather than the specific distribution: the distribution is created
-  # in a later apply than this role (see the apply sequence), and referencing it here would
-  # force CloudFront to be built before an image exists. CreateInvalidation cannot read or
-  # mutate content, so the widened resource is low-consequence.
+  # Scoped to this one distribution. Previously widened to the whole account because the
+  # distribution was created in a later apply than this role — now that the first image is
+  # seeded inside the same apply (see terraform_data.seed_image in ecr.tf), everything exists
+  # in one plan and this can be as narrow as every other statement here.
   statement {
     sid       = "PwaInvalidate"
     effect    = "Allow"
     actions   = ["cloudfront:CreateInvalidation"]
-    resources = ["arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/*"]
+    resources = [aws_cloudfront_distribution.pwa.arn]
   }
 }
 
