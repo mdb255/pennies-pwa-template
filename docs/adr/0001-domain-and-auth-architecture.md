@@ -11,10 +11,10 @@ Adapter). A **bare Lambda Function URL cannot carry a custom domain** — puttin
 `api.<domain>` in front of it would require CloudFront or API Gateway as an extra
 indirection layer.
 
-The reference app this template is based on (`cat-slideshow`) ran the API on a custom
-subdomain (`cat-slideshow-api.mikeindevelopment.com`) and set the session-resume
+The reference app this template is based on (`my-custom-app`) ran the API on a custom
+subdomain (`my-custom-app-api.mydomain.com`) and set the session-resume
 **refresh token as an HttpOnly cookie on the shared parent domain**
-(`.mikeindevelopment.com`), so the browser sent it to both the PWA and the API. That
+(`.mydomain.com`), so the browser sent it to both the PWA and the API. That
 model depends on the API and PWA sharing a registrable parent domain, and on
 cross-site cookies — which Safari and Firefox block by default and Chrome now lets users
 disable. It also keeps a long-lived refresh token in the browser.

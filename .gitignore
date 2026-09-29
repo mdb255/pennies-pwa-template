@@ -9,6 +9,7 @@ NEXT-UP.md
 docs/plans/
 docs/logs/
 docs/tasks/
+docs/TEST-ACCOUNTS.md
 
 # OpenTofu — .terraform.lock.hcl IS committed on purpose (pins provider versions)
 .terraform/
