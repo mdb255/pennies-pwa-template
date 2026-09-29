@@ -2,6 +2,7 @@
 .venv/
 
 **/source-config.json
+bootstrap-project.config.yaml
 
 NEXT-UP.md
 

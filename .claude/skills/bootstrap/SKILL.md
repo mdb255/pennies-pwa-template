@@ -26,7 +26,7 @@ This file holds values that don't change between projects, plus `NEON_API_KEY`. 
 read with `Read`/`cat` — only sourced in a subshell — because it holds that key.
 
 1. If `~/.config/pennies-pwa-template/export-vars.sh` doesn't exist, copy
-   `.claude/skills/bootstrap/export-vars.template.sh` into place and `chmod 600` it.
+   `.claude/skills/bootstrap/export-vars.sh.example` into place and `chmod 600` it.
 2. List which variables are still empty, by name only:
    ```sh
    bash -c 'source ~/.config/pennies-pwa-template/export-vars.sh && for v in PENNIES_PROJECTS_DIR PENNIES_AWS_ACCOUNT_ID PENNIES_AWS_REGION PENNIES_AWS_PROFILE PENNIES_ROOT_DOMAIN PENNIES_NEON_REGION_ID PENNIES_GITHUB_VISIBILITY PENNIES_LAMBDA_MEMORY PENNIES_API_PORT PENNIES_PYTHON_VERSION PENNIES_NODE_VERSION PENNIES_PNPM_VERSION; do [ -z "${!v}" ] && echo "$v"; done'
@@ -37,7 +37,7 @@ read with `Read`/`cat` — only sourced in a subshell — because it holds that 
      get-caller-identity`, `aws configure get region`, `aws configure list-profiles`.
    - `PENNIES_ROOT_DOMAIN` ← `aws route53 list-hosted-zones --query
      "HostedZones[].Name"` (public zones you own).
-   - Others: use the template's own defaults (see `export-vars.template.sh`) as the
+   - Others: use the template's own defaults (see `export-vars.sh.example`) as the
      recommended option.
 4. Write answers back into `~/.config/pennies-pwa-template/export-vars.sh` with targeted `sed`
    edits (one variable per edit) — never rewrite the whole file, and never print its contents.
@@ -67,9 +67,10 @@ user — don't overwrite in-progress work.
 
 ## 5. Config
 
-1. Write `<project>/bootstrap-project.config.yaml` from the export-vars defaults plus the
-   prompted `app.name`/`infra.github_repo`. Match the shape in the shipped
-   `bootstrap-project.config.yaml` — same keys, same structure.
+1. Copy `<project>/bootstrap-project.config.yaml.example` to
+   `<project>/bootstrap-project.config.yaml` (gitignored — keeps the real AWS account ID etc.
+   out of the new project's commits), then fill it in from the export-vars defaults plus the
+   prompted `app.name`/`infra.github_repo`.
 2. Show the filled-in config to the user (it has no secrets in it — safe to print).
 3. Run `uv run bootstrap-project.py` in the new project directory.
 4. First commit, authorized by this skill run:

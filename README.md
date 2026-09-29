@@ -18,7 +18,8 @@ Run it from the template repo with Claude Code.
 
 The manual path:
 
-1. Edit `bootstrap-project.config.yaml` with your app name and AWS details
+1. Copy `bootstrap-project.config.yaml.example` to `bootstrap-project.config.yaml` and edit it
+   with your app name and AWS details (the real file is gitignored, so it won't get committed)
 2. Run `uv run bootstrap-project.py` — renames directories and substitutes all template placeholders in place
 3. Follow the READMEs inside the generated `back-end/` and `front-end/` directories for local dev setup
 4. Follow `infra/README.md` to provision AWS/Neon and deploy
@@ -46,8 +47,8 @@ The manual path:
 
 ```
 .
-├── bootstrap-project.py           # Renders the template — run this to set up your project
-├── bootstrap-project.config.yaml  # Your config — edit this first
+├── bootstrap-project.py                   # Renders the template — run this to set up your project
+├── bootstrap-project.config.yaml.example  # Copy to bootstrap-project.config.yaml and edit first
 ├── back-end/
 │   └── __app-name__-api/    # FastAPI backend (directory renamed on bootstrap)
 ├── front-end/
@@ -64,7 +65,7 @@ The manual path:
       exported as `NEON_API_KEY`
 - [ ] Own a domain with a public Route53 hosted zone — the PWA is served at `<app_name>.<root_domain>`
 - [ ] Configure AWS credentials with admin-level access (`infra/` creates IAM roles)
-- [ ] Fill in `bootstrap-project.config.yaml`
+- [ ] Copy `bootstrap-project.config.yaml.example` to `bootstrap-project.config.yaml` and fill it in
 - [ ] Run `uv run bootstrap-project.py`
 - [ ] Add DB credentials to the generated `.env` files (never committed) — for local dev,
       pointed at the `docker-compose.local.yml` Postgres, not Neon
