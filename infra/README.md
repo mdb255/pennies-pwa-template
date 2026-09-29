@@ -8,7 +8,8 @@ Architecture: [`../docs/adr/0001-domain-and-auth-architecture.md`](../docs/adr/0
 
 ## Shape of this config
 
-There are **no Terraform variables and no `terraform.tfvars`**. Every value comes from
+There are **no Terraform config variables and no `terraform.tfvars`**. (The one operational
+toggle, `allow_destroy` in `variables.tf`, only exists for teardown — see [Teardown](#teardown).) Every value comes from
 `bootstrap-project.config.yaml` and is stamped in once by `bootstrap-project.py`, the same way
 the rest of the repo is templated — that includes `scripts/*.sh`, not just the `.tf` files.
 After bootstrap, `locals.tf` holds the concrete config for this one project and `scripts/lib.sh`
@@ -149,6 +150,36 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 ```
 
 Then the browser end-to-end: signup → confirm → login → reload (resume) → logout.
+
+## Teardown
+
+`scripts/teardown-infra.sh` removes everything `bootstrap-infra.sh` provisioned. Run it only when
+you mean to; it isn't a bootstrap phase. It reads `tofu state list` as the ledger of what exists,
+flips the three guards that block a plain destroy (Cognito deletion protection, ECR `force_delete`,
+S3 `force_destroy`) through the `allow_destroy` variable, runs `tofu destroy`, then empties and
+deletes the state bucket. Only this script sets `allow_destroy`; a normal `plan`/`apply` leaves
+the guards on.
+
+```sh
+infra/scripts/teardown-infra.sh --check-only   # read-only: what still exists, by name
+infra/scripts/teardown-infra.sh --plan-only    # show what would be destroyed, change nothing
+infra/scripts/teardown-infra.sh [--backup]     # destroy; you type the app name to confirm
+```
+
+- `--backup` first writes a `pg_dump -Fc` of the database to `infra/backups/` (git-ignored) and
+  checks it with `pg_restore -l`. The Neon project has `history_retention_seconds = 0`, so
+  without a dump the data cannot be recovered.
+- **Drift guard:** the unlock plan may only flip those three guards. If it wants to change
+  anything else (say, a resource left in state after its `.tf` was deleted), the script aborts
+  and lists it; reconcile config and state, then rerun.
+- **The GitHub repo must still exist**, because `data.external.github_oidc_sub` calls the GitHub
+  API on every plan, including a destroy plan. If it is already gone, recreate it empty with
+  `bootstrap-infra.sh repo`, tear down, then delete it.
+- **Never deleted:** the GitHub repo (the script only prints the `gh repo delete` command for you
+  to run yourself), the account-wide GitHub OIDC provider, the Route53 hosted zone, local files.
+- A rerun after a mid-way failure is safe; each step checks reality first.
+- It ends with a name-based leftover check (also `--check-only`) and exits non-zero if anything
+  remains.
 
 ## Out of scope
 

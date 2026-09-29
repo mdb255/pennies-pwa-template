@@ -5,6 +5,10 @@ resource "aws_s3_bucket" "pwa" {
   # Bucket names are globally unique; the account id is a deterministic suffix that avoids
   # needing the random provider.
   bucket = "${local.app_name}-prod-${data.aws_caller_identity.current.account_id}"
+
+  # Teardown only (see variables.tf): lets destroy delete the bucket while it still holds the
+  # built PWA.
+  force_destroy = var.allow_destroy
 }
 
 resource "aws_s3_bucket_public_access_block" "pwa" {

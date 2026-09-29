@@ -11,7 +11,7 @@ resource "aws_cognito_user_pool" "main" {
 
   mfa_configuration   = "OFF"
   user_pool_tier      = "ESSENTIALS"
-  deletion_protection = "ACTIVE"
+  deletion_protection = var.allow_destroy ? "INACTIVE" : "ACTIVE"
 
   password_policy {
     minimum_length                   = 8

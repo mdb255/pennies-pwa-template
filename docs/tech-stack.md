@@ -35,3 +35,4 @@
 - AWS ECR
 - AWS S3 / CloudFront (hosting Frontend)
 - AWS SSM (secrets)
+- `infra/scripts/bootstrap-infra.sh` / `teardown-infra.sh` (provision / destroy the stack)

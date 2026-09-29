@@ -114,3 +114,5 @@ tool calls, so each one needs the export again. Run everything from
 When `verify` passes, tell the user the app is live at the `pwa_url` tofu output, and mention
 `infra/scripts/bootstrap-infra.sh status` as the way to check on it later, and `db --rotate` as
 the way to rotate DB passwords.
+
+To undo the project later, see `/teardown`.

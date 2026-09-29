@@ -15,6 +15,8 @@
 # first — interactively, or via BOOTSTRAP_CONFIRM_DEPLOY=yes if something already got that
 # confirmation another way (the /bootstrap skill asks with AskUserQuestion, then sets this).
 #
+# To undo all of this, see teardown-infra.sh.
+#
 # Rendered, like the other scripts in this directory: values are stamped in by
 # bootstrap-project.py, not read from bootstrap-project.config.yaml at runtime.
 set -euo pipefail

@@ -18,4 +18,5 @@ docs/TEST-ACCOUNTS.md
 *.tfplan
 
 infra/.bootstrap-infra-logs/
+infra/backups/
 

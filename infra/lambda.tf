@@ -43,7 +43,9 @@ resource "aws_lambda_function" "api" {
     ignore_changes = [image_uri]
   }
 
-  depends_on = [aws_iam_role_policy.api_ssm, terraform_data.seed_image]
+  # The log group is listed so destroy removes the function first; otherwise a late invocation
+  # can recreate the log group after tofu deleted it, leaving an orphan.
+  depends_on = [aws_iam_role_policy.api_ssm, terraform_data.seed_image, aws_cloudwatch_log_group.api]
 }
 
 resource "aws_cloudwatch_log_group" "api" {
@@ -114,7 +116,9 @@ resource "aws_lambda_function" "auth" {
     ignore_changes = [image_uri]
   }
 
-  depends_on = [aws_iam_role_policy.auth_ssm, terraform_data.seed_image]
+  # The log group is listed so destroy removes the function first; otherwise a late invocation
+  # can recreate the log group after tofu deleted it, leaving an orphan.
+  depends_on = [aws_iam_role_policy.auth_ssm, terraform_data.seed_image, aws_cloudwatch_log_group.auth]
 }
 
 resource "aws_cloudwatch_log_group" "auth" {

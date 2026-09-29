@@ -1,7 +1,8 @@
 # All configuration for this stack is stamped in by bootstrap-project.py from
-# bootstrap-project.config.yaml. There are deliberately no variables and no terraform.tfvars:
-# the template renders once, and the result is a concrete, readable config for exactly one
-# project.
+# bootstrap-project.config.yaml. There are deliberately no config variables and no
+# terraform.tfvars: the template renders once, and the result is a concrete, readable config
+# for exactly one project. (The one operational toggle, allow_destroy in variables.tf, is only
+# ever set by scripts/teardown-infra.sh.)
 
 locals {
   app_name       = "<{{ app_name }}>"

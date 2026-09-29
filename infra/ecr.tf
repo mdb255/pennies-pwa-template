@@ -5,6 +5,9 @@ resource "aws_ecr_repository" "api" {
   # functions run this one image; APP_COMPONENT decides which routers they mount.
   image_tag_mutability = "MUTABLE"
 
+  # Teardown only (see variables.tf): lets destroy delete the repo while it still holds images.
+  force_delete = var.allow_destroy
+
   image_scanning_configuration {
     scan_on_push = false
   }
