@@ -49,7 +49,7 @@ you; to run it by hand:
 
 ```sh
 cd infra/scripts
-./bootstrap-infra.sh pre     # preflight, state, plan — review the plan, then:
+./bootstrap-infra.sh pre     # preflight, state, repo, plan — review the plan, then:
 ./bootstrap-infra.sh post    # apply, db, deploy, verify
 ```
 
@@ -57,10 +57,11 @@ cd infra/scripts
 | --- | --- | --- |
 | `preflight` | Checks required tools, `NEON_API_KEY`, that your AWS caller account matches config, the `<{{ root_domain }}>` hosted zone, and the GitHub OIDC provider | Read-only |
 | `state` | `bootstrap-state.sh` (creates/reconciles the versioned, encrypted, tagged state bucket), then `tofu init` | Bucket exists, is versioned, blocks public access, is tagged |
+| `repo` | Creates the empty GitHub repo if it doesn't exist (confirms first; outward-facing). It must exist before `plan`: the deploy role's OIDC trust policy uses the repo's own subject-claim prefix, which GitHub sets per repo (name-based, or the ID-based form new repos get by default) | Repo exists |
 | `plan` | `tofu plan`, saved to `infra/.bootstrap-infra-logs/bootstrap.tfplan` | **Stop here and review** — this is the approval point |
 | `apply` | `tofu apply` on the saved plan only; refuses if it's missing or stale | `tofu plan -detailed-exitcode` shows no changes afterward |
 | `db` | Generates both DB passwords in memory, runs `scripts/neon-init.sql`, writes both SSM SecureStrings. Nothing touches disk or stdout. `db --rotate` forces new passwords. | Skipped if both SSM URLs are already real and `select 1` succeeds against each |
-| `deploy` | Confirms with you first (outward-facing). Creates the GitHub repo and pushes if it doesn't exist yet, or triggers both workflows if it does; then watches both runs | Both workflow runs succeed |
+| `deploy` | Confirms with you first (outward-facing). Pushes `main` if the repo has none yet, or triggers both workflows if it does; then watches both runs | Both workflow runs succeed |
 | `verify` | Scripted version of "Verify after apply" below | Pass/fail |
 
 `status` runs every phase's check, read-only — use it to see what's left without doing anything.
@@ -134,11 +135,12 @@ AUTH=$(tofu output -raw auth_function_url)
 curl -s "$API/healthz"                       # {"status":"ok"}
 curl -I "$PWA"                               # 200, from CloudFront
 
-# x-amz-content-sha256 must be forwarded through CloudFront's /auth/* behavior for the
-# request to reach the auth Lambda's IAM-authorized Function URL at all.
+# For POST/PUT, the viewer must send the real SHA-256 of the body in x-amz-content-sha256;
+# Lambda rejects UNSIGNED-PAYLOAD with a 403, which the SPA fallback turns into a 200 index.html.
+# This body is empty, so it's the empty-string hash.
 curl -s -o /dev/null -w '%{http_code}\n' \
   -X POST "$PWA/auth/login/" \
-  -H 'x-amz-content-sha256: UNSIGNED-PAYLOAD'          # routes through to the auth Lambda (422, not 404)
+  -H "x-amz-content-sha256: $(printf '' | sha256sum | cut -d' ' -f1)"   # routes through to the auth Lambda (422, not 404)
 
 # The auth Function URL must NOT be directly invocable:
 curl -s -o /dev/null -w '%{http_code}\n' \

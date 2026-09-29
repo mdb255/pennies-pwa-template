@@ -83,7 +83,11 @@ before the actual command — shell state (env vars, cwd) does not persist betwe
 tool calls, so each one needs the export again. Run everything from
 `<project>/infra/scripts/`.
 
-1. Run `./bootstrap-infra.sh pre` (preflight → state → plan).
+1. Before `pre`: the plan reads the GitHub repo's OIDC settings (they go into the deploy role's
+   trust policy), so `pre` creates the repo — empty, nothing pushed — if it doesn't exist yet.
+   If `gh repo view <infra.github_repo>` fails, AskUserQuestion to confirm creating it
+   (outward-facing), then export `BOOTSTRAP_CONFIRM_REPO=yes` for the `pre` call.
+   Run `./bootstrap-infra.sh pre` (preflight → state → repo → plan).
    - If `preflight` fails, report the specific check that failed and stop — most failures here
      (missing hosted zone, missing OIDC provider, account mismatch) need the user to fix
      something outside this repo.
@@ -92,8 +96,8 @@ tool calls, so each one needs the export again. Run everything from
 3. AskUserQuestion: approve applying this plan? If no, stop here — the user can rerun `/bootstrap`
    later to pick up from `pre` again.
 4. On approval, run `./bootstrap-infra.sh post` (apply → db → deploy → verify) — **except**
-   `deploy`: before it runs, AskUserQuestion to confirm creating the GitHub repo (or, if it
-   already exists, triggering the workflows) and pushing. This is outward-facing and
+   `deploy`: before it runs, AskUserQuestion to confirm pushing `main` to the GitHub repo and
+   running the workflows (or, if `main` is already pushed, just triggering them). This is outward-facing and
    irreversible-ish, so it gets its own explicit confirmation even though it's inside `post`.
    Once confirmed, export `BOOTSTRAP_CONFIRM_DEPLOY=yes` before invoking `post` (or `deploy` on
    its own, if resuming) so the script doesn't also block on its own interactive prompt.

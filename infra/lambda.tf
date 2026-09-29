@@ -60,7 +60,7 @@ resource "aws_lambda_function_url" "api" {
   # invoking the function, so the app deliberately does not add CORSMiddleware in prod.
   cors {
     allow_origins = [local.pwa_origin]
-    allow_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    allow_methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
     allow_headers = ["authorization", "content-type"]
     # The browser sends a Bearer token, never a cookie — credentials mode stays off.
     allow_credentials = false

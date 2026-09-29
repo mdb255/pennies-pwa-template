@@ -53,6 +53,8 @@ jobs:
         # themselves at cold start, so CI never needs to handle it.
         PARAMS=(
           "MIGRATIONS_DB_URL"
+          "USER_POOL_ID"
+          "APP_CLIENT_ID"
           "API_LAMBDA_FUNCTION_NAME"
           "AUTH_LAMBDA_FUNCTION_NAME"
         )
@@ -116,6 +118,6 @@ jobs:
 
         # Wait only after both updates are in flight, so they settle in parallel.
         for fn in "${API_LAMBDA_FUNCTION_NAME}" "${AUTH_LAMBDA_FUNCTION_NAME}"; do
-          aws lambda wait function-updated --function-name "${fn}"
+          aws lambda wait function-updated-v2 --function-name "${fn}"
           echo "${fn} updated."
         done

@@ -19,11 +19,12 @@ data "aws_iam_policy_document" "deploy_assume" {
     }
 
     # Pinned to main of this one repository. Without the `sub` condition, any repo in any
-    # GitHub org could assume this role.
+    # GitHub org could assume this role. The prefix comes from the repo itself (data.tf), since
+    # its format (name- or ID-based) is a GitHub setting.
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${local.github_repo}:ref:refs/heads/main"]
+      values   = ["${data.external.github_oidc_sub.result.prefix}:ref:refs/heads/main"]
     }
   }
 }

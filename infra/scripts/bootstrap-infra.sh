@@ -158,8 +158,9 @@ check_db() {
   migrations_url=$(aws ssm get-parameter --name "$SSM_PREFIX/MIGRATIONS_DB_URL" --with-decryption --query Parameter.Value --output text 2>/dev/null) || return 1
   [[ "$runtime_url" != PLACEHOLDER* && -n "$runtime_url" ]] || return 1
   [[ "$migrations_url" != PLACEHOLDER* && -n "$migrations_url" ]] || return 1
-  psql "$runtime_url" -tAc 'select 1' >/dev/null 2>&1 || return 1
-  psql "$migrations_url" -tAc 'select 1' >/dev/null 2>&1 || return 1
+  # psql rejects SQLAlchemy's postgresql+psycopg:// scheme; libpq only knows postgresql://.
+  psql "${runtime_url/postgresql+psycopg:/postgresql:}" -tAc 'select 1' >/dev/null 2>&1 || return 1
+  psql "${migrations_url/postgresql+psycopg:/postgresql:}" -tAc 'select 1' >/dev/null 2>&1 || return 1
 }
 
 phase_db() {
@@ -174,8 +175,9 @@ phase_db() {
   $rotate && log_info "Rotating: generating new passwords for both roles."
 
   local db_owner_pw svc_user_pw conn_uri db_host db_name logfile
-  db_owner_pw=$(openssl rand -base64 24)
-  svc_user_pw=$(openssl rand -base64 24)
+  # hex, not base64: these are embedded unescaped in connection URLs, and base64's / + = break them.
+  db_owner_pw=$(openssl rand -hex 24)
+  svc_user_pw=$(openssl rand -hex 24)
   conn_uri=$(tofu_ output -raw neon_bootstrap_connection_uri)
   db_host=$(tofu_ output -raw neon_database_host)
   db_name=$(tofu_ output -raw neon_database_name)
@@ -210,12 +212,19 @@ phase_db() {
 
 # --- deploy --------------------------------------------------------------------------------
 
+latest_run_id() {
+  gh run list --repo "$GITHUB_REPO" --workflow "$1" --limit 1 --json databaseId --jq '.[0].databaseId // empty' 2>/dev/null || true
+}
+
+# $2 is the newest run id from before this deploy triggered anything, so a re-deploy doesn't
+# latch onto the previous (finished) run.
 watch_workflow() {
-  local workflow="$1" run_id=""
+  local workflow="$1" prev_id="${2:-}" run_id=""
   local i
   for i in $(seq 1 20); do
-    run_id=$(gh run list --repo "$GITHUB_REPO" --workflow "$workflow" --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null) || true
-    [[ -n "$run_id" ]] && break
+    run_id=$(latest_run_id "$workflow")
+    [[ -n "$run_id" && "$run_id" != "$prev_id" ]] && break
+    run_id=""
     sleep 3
   done
   if [[ -z "$run_id" ]]; then
@@ -233,23 +242,63 @@ check_deploy() {
   [[ "$backend" == "success" && "$frontend" == "success" ]]
 }
 
+# The deploy role's OIDC trust policy is built from this repo's own settings (data.tf), so the
+# repo has to exist before `plan`. Creates it empty — nothing is pushed until `deploy`.
+phase_repo() {
+  log_info "=== repo ==="
+  if gh repo view "$GITHUB_REPO" >/dev/null 2>&1; then
+    log_info "Repo $GITHUB_REPO already exists."
+    return 0
+  fi
+  confirm "Create empty GitHub repo $GITHUB_REPO (${GITHUB_VISIBILITY})? Nothing is pushed until deploy. This is outward-facing." BOOTSTRAP_CONFIRM_REPO \
+    || { log_error "Repo $GITHUB_REPO must exist before 'plan' — its OIDC subject claim goes into the deploy role's trust policy."; return 1; }
+  ( cd "$INFRA_DIR/.." && gh repo create "$GITHUB_REPO" "--${GITHUB_VISIBILITY}" --source . --remote origin )
+}
+
+# GitHub only registers a workflow file once it has processed the push, and a push it hasn't
+# registered yet never fires the workflow. So: if a run appears on its own, use it; otherwise,
+# once the workflow is listed and still has no run, dispatch it.
+ensure_run() {
+  local workflow="$1" prev_id="${2:-}" i listed=0 run_id
+  for i in $(seq 1 40); do
+    run_id=$(latest_run_id "$workflow")
+    [[ -n "$run_id" && "$run_id" != "$prev_id" ]] && return 0
+    if gh workflow list --repo "$GITHUB_REPO" --json path --jq '.[].path' 2>/dev/null | grep -q "$workflow"; then
+      listed=$((listed + 1))
+      if (( listed >= 3 )); then
+        gh workflow run "$workflow" --repo "$GITHUB_REPO"
+        return 0
+      fi
+    fi
+    sleep 2
+  done
+  log_error "$workflow never registered on $GITHUB_REPO"
+  return 1
+}
+
 phase_deploy() {
   log_info "=== deploy ==="
   local repo_dir; repo_dir="$(cd "$INFRA_DIR/.." && pwd)"
 
-  if gh repo view "$GITHUB_REPO" >/dev/null 2>&1; then
-    log_info "Repo $GITHUB_REPO already exists."
+  phase_repo || return 1
+
+  local prev_backend prev_frontend
+  prev_backend=$(latest_run_id deploy-backend.yml)
+  prev_frontend=$(latest_run_id deploy-frontend.yml)
+
+  if git -C "$repo_dir" ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
     confirm "Trigger both GitHub Actions workflows on $GITHUB_REPO now?" BOOTSTRAP_CONFIRM_DEPLOY \
       || { log_info "Skipping deploy."; return 0; }
-    ( cd "$repo_dir" && gh workflow run deploy-backend.yml --repo "$GITHUB_REPO" )
-    ( cd "$repo_dir" && gh workflow run deploy-frontend.yml --repo "$GITHUB_REPO" )
+    gh workflow run deploy-backend.yml --repo "$GITHUB_REPO"
+    gh workflow run deploy-frontend.yml --repo "$GITHUB_REPO"
   else
-    confirm "Create GitHub repo $GITHUB_REPO (${GITHUB_VISIBILITY}) and push? This is outward-facing." BOOTSTRAP_CONFIRM_DEPLOY \
+    confirm "Push main to $GITHUB_REPO and run both deploy workflows? This is outward-facing." BOOTSTRAP_CONFIRM_DEPLOY \
       || { log_info "Skipping deploy."; return 0; }
-    ( cd "$repo_dir" && gh repo create "$GITHUB_REPO" "--${GITHUB_VISIBILITY}" --source . --push )
+    git -C "$repo_dir" push -u origin main
+    ensure_run deploy-backend.yml "$prev_backend" && ensure_run deploy-frontend.yml "$prev_frontend" || return 1
   fi
 
-  watch_workflow deploy-backend.yml && watch_workflow deploy-frontend.yml
+  watch_workflow deploy-backend.yml "$prev_backend" && watch_workflow deploy-frontend.yml "$prev_frontend"
 }
 
 # --- verify --------------------------------------------------------------------------------
@@ -267,11 +316,13 @@ phase_verify() {
   status=$(curl -s -o /dev/null -w '%{http_code}' -I "$pwa")
   [[ "$status" == "200" ]] || { log_error "pwa: expected 200, got $status"; ok=false; }
 
-  # x-amz-content-sha256 must be forwarded through CloudFront's /auth/* behavior for the
-  # request to reach the auth Lambda's IAM-authorized Function URL at all — omitting it was a
-  # stale README check that never actually exercised this path.
+  # For POST/PUT through CloudFront OAC to a Lambda Function URL, the viewer must send the real
+  # SHA-256 of the body in x-amz-content-sha256 — Lambda rejects UNSIGNED-PAYLOAD with a 403,
+  # which the distribution's SPA fallback (403 -> /index.html) then turns into a misleading
+  # 200. The body here is empty, so its hash is the well-known empty-string SHA-256.
+  local empty_sha256; empty_sha256=$(printf '' | sha256sum | cut -d' ' -f1)
   status=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${pwa}/auth/login/" \
-    -H 'x-amz-content-sha256: UNSIGNED-PAYLOAD')
+    -H "x-amz-content-sha256: ${empty_sha256}")
   [[ "$status" == "422" ]] || { log_error "pwa /auth/login/: expected 422, got $status"; ok=false; }
 
   status=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${auth}auth/login/" \
@@ -311,13 +362,13 @@ phase_status() {
 # --- driver ------------------------------------------------------------------------------
 
 usage() {
-  echo "Usage: $0 [pre|post|status|preflight|state|plan|apply|db [--rotate]|deploy|verify]" >&2
+  echo "Usage: $0 [pre|post|status|preflight|state|repo|plan|apply|db [--rotate]|deploy|verify]" >&2
   exit 1
 }
 
 case "${1:-}" in
   pre)
-    phase_preflight && phase_state && phase_plan
+    phase_preflight && phase_state && phase_repo && phase_plan
     ;;
   post)
     phase_apply && phase_db && phase_deploy && phase_verify
@@ -325,6 +376,7 @@ case "${1:-}" in
   status)   phase_status ;;
   preflight) phase_preflight ;;
   state)    phase_state ;;
+  repo)     phase_repo ;;
   plan)     phase_plan ;;
   apply)    phase_apply ;;
   db)       shift; phase_db "$@" ;;

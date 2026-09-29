@@ -1,0 +1,12 @@
+# pnpm 11 ignores the "pnpm" field in package.json, so these settings live here.
+overrides:
+  sharp: 0.32.6
+  sharp-ico: 0.1.5
+
+# Build-script allowlist. pnpm 11 reads allowBuilds; pnpm 10 reads onlyBuiltDependencies.
+allowBuilds:
+  esbuild: true
+  sharp: true
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

@@ -16,6 +16,11 @@ terraform {
       source  = "kislerdm/neon"
       version = "~> 0.15"
     }
+    # Runs `gh api` to read the repo's OIDC subject-claim prefix — see data.tf.
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3"
+    }
   }
 
   # Created once, before the first apply — see infra/README.md ("State bucket bootstrap").

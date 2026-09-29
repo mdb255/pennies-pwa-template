@@ -7,6 +7,20 @@ data "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 }
 
+# The prefix GitHub puts in this repo's OIDC `sub` claim. Newer repos default to an immutable,
+# ID-based form (repo:<owner>@<id>/<repo>@<id>) instead of repo:<owner>/<repo>, so the deploy
+# role's trust policy (iam-deploy.tf) reads whatever this repo actually uses rather than
+# assuming one. The ID form is also the safer pin: a deleted-and-recreated or transferred repo
+# under the same name gets a different sub. Requires the repo to exist and `gh` to be logged in
+# — bootstrap-infra.sh creates the (empty) repo before `plan`. Falls back to the name form when
+# the API reports no prefix.
+data "external" "github_oidc_sub" {
+  program = [
+    "gh", "api", "repos/${local.github_repo}/actions/oidc/customization/sub",
+    "--jq", "{prefix: (.sub_claim_prefix // \"repo:${local.github_repo}\")}",
+  ]
+}
+
 # The public hosted zone for root_domain must already exist (domain registration and
 # delegation are out of scope for this stack).
 data "aws_route53_zone" "root" {
