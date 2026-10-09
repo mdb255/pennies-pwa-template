@@ -14,6 +14,7 @@ export PENNIES_AWS_REGION=""
 export PENNIES_AWS_PROFILE="default"
 export PENNIES_ROOT_DOMAIN=""
 export PENNIES_NEON_REGION_ID=""      # blank → aws-<region>
+export PENNIES_GITHUB_ORG=""
 export PENNIES_GITHUB_VISIBILITY="private"
 export PENNIES_LAMBDA_MEMORY="512"
 export PENNIES_API_PORT="8000"

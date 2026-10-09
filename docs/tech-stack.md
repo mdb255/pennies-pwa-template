@@ -4,8 +4,8 @@
 - React
 - TypeScript
 - PWA
-- Ionic 8
-- Tailwind CSS v4 (theme bridge to Ionic)
+- Ionic
+- Tailwind CSS (theme bridge to Ionic)
 - Vite
 - pnpm
 - Redux Toolkit + RTK Query (state management & data fetching)
