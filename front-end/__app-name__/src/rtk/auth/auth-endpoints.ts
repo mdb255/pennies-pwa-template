@@ -1,6 +1,8 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/query/react'
+import type { EndpointBuilder, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-export function getAuthEndpoints(builder: EndpointBuilder<any, any, any>) {
+type AuthBuilder = EndpointBuilder<ReturnType<typeof fetchBaseQuery>, never, 'authApi'>
+
+export function getAuthEndpoints(builder: AuthBuilder) {
     return {
         login: builder.mutation<{ access_token: string; access_token_expires_in_ms: number }, { email: string; password: string }>({
             query: (credentials) => ({

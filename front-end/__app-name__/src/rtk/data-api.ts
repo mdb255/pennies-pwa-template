@@ -9,7 +9,7 @@ const rawBaseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_BASE || 'http://localhost:8000',
     credentials: 'omit',
     prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as any)?.auth?.accessToken
+        const token = (getState() as { auth?: { accessToken?: string | null } }).auth?.accessToken
         if (token) {
             headers.set('authorization', `Bearer ${token}`)
         }

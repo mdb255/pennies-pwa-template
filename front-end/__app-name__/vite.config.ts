@@ -1,6 +1,5 @@
-/// <reference types="vitest/config" />
 import { VitePWA } from 'vite-plugin-pwa';
-import { defineConfig } from 'vite'
+import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -48,5 +47,7 @@ export default defineConfig({
         environment: 'jsdom',
         globals: true,
         setupFiles: ['./src/test-setup.ts'],
+        // e2e/ holds Playwright specs, which Vitest can't run
+        exclude: [...configDefaults.exclude, 'e2e/**'],
     },
 })

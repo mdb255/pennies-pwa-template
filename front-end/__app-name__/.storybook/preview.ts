@@ -1,4 +1,4 @@
-import type { Preview } from '@storybook/react'
+import type { Preview } from '@storybook/react-vite'
 import { setupIonicReact } from '@ionic/react'
 import '../src/styling/ionic-base.css'
 import '../src/styling/ionic-theme.css'

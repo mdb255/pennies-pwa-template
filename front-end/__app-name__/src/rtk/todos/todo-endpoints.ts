@@ -1,7 +1,9 @@
-import type { EndpointBuilder } from '@reduxjs/toolkit/query/react'
+import type { BaseQueryFn, EndpointBuilder, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
 import type { Todo, TodoCreate, TodoUpdate, TodosQueryParams } from './todo-model'
 
-export const getTodoEndpoints = (builder: EndpointBuilder<any, any, any>) => ({
+type TodoBuilder = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, 'Todo', 'dataApi'>
+
+export const getTodoEndpoints = (builder: TodoBuilder) => ({
     getTodos: builder.query<Todo[], TodosQueryParams>({
         query: (params) => ({ url: 'todos/', params }),
         providesTags: (result) =>
