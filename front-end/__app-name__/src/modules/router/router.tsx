@@ -26,7 +26,7 @@ function Router() {
                 />
                 {accessRoute({ path: '/login', exact: true, access: 'anonymous', element: <LoginScreen /> })}
                 {accessRoute({ path: '/sign-up', exact: true, access: 'anonymous', element: <SignUpScreen /> })}
-                <Route path="/" render={() => <TabsLayout />} />
+                {accessRoute({ path: '/', access: 'authenticated', element: <TabsLayout /> })}
             </Switch>
         </IonRouterOutlet>
     )
