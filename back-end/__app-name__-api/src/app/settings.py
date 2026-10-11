@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # Optional: symmetric key to encrypt the stored refresh token at rest. Off for v1
     # (plaintext at rest, protected by DB access controls). Left unwired intentionally.
     session_token_encryption_key: str | None = None
-    cors_origins: str = "http://127.0.0.1:5173"  # comma-separated list of allowed origins
+    cors_origins: str = ""  # comma-separated list of allowed origins; local dev only (set in .env)
     
     @property
     def cors_origins_list(self) -> list[str]:

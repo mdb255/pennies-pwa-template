@@ -29,7 +29,7 @@ read with `Read`/`cat` — only sourced in a subshell — because it holds that 
    `.claude/skills/bootstrap/export-vars.sh.example` into place and `chmod 600` it.
 2. List which variables are still empty, by name only:
    ```sh
-   bash -c 'source ~/.config/pennies-pwa-template/export-vars.sh && for v in PENNIES_PROJECTS_DIR PENNIES_AWS_ACCOUNT_ID PENNIES_AWS_REGION PENNIES_AWS_PROFILE PENNIES_ROOT_DOMAIN PENNIES_NEON_REGION_ID PENNIES_GITHUB_VISIBILITY PENNIES_LAMBDA_MEMORY PENNIES_API_PORT PENNIES_PYTHON_VERSION PENNIES_NODE_VERSION PENNIES_PNPM_VERSION; do [ -z "${!v}" ] && echo "$v"; done'
+   bash -c 'source ~/.config/pennies-pwa-template/export-vars.sh && for v in PENNIES_PROJECTS_DIR PENNIES_AWS_ACCOUNT_ID PENNIES_AWS_REGION PENNIES_AWS_PROFILE PENNIES_ROOT_DOMAIN PENNIES_NEON_REGION_ID PENNIES_GITHUB_VISIBILITY PENNIES_LAMBDA_MEMORY PENNIES_PYTHON_VERSION PENNIES_NODE_VERSION PENNIES_PNPM_VERSION; do [ -z "${!v}" ] && echo "$v"; done'
    ```
 3. For each empty non-secret variable, ask with AskUserQuestion. Offer a detected value as the
    recommended option where you can:
@@ -53,6 +53,11 @@ read with `Read`/`cat` — only sourced in a subshell — because it holds that 
 Every run, regardless of defaults, ask with AskUserQuestion:
 - `app.name` — hyphens, matches `^[a-z][a-z0-9-]*$`.
 - `infra.github_repo` — `owner/repo`.
+- `app.dev_port_offset` — integer 0-99, unique per app on this machine (local dev ports are
+  frontend 7100+N, api 7200+N, postgres 7300+N, adminer 7400+N). Not an org-level default, so
+  it is never in export-vars.sh. Suggest an unused value as the recommended option: grep
+  `dev_port_offset:` in `$PENNIES_PROJECTS_DIR/*/bootstrap-project.config.yaml` and pick the
+  lowest unused one (optionally also check `ss -ltn` for those ports being in use).
 
 Then check `$PENNIES_PROJECTS_DIR/<app.name>`. If it exists and is non-empty, stop and tell the
 user — don't overwrite in-progress work.
@@ -70,7 +75,7 @@ user — don't overwrite in-progress work.
 1. Copy `<project>/bootstrap-project.config.yaml.example` to
    `<project>/bootstrap-project.config.yaml` (gitignored — keeps the real AWS account ID etc.
    out of the new project's commits), then fill it in from the export-vars defaults plus the
-   prompted `app.name`/`infra.github_repo`.
+   prompted `app.name`/`infra.github_repo`/`app.dev_port_offset`.
 2. Show the filled-in config to the user (it has no secrets in it — safe to print).
 3. Run `uv run bootstrap-project.py` in the new project directory.
 4. First commit, authorized by this skill run:

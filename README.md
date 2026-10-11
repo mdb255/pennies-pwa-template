@@ -33,7 +33,7 @@ The manual path:
 | `aws_account_id` | `bootstrap-project.config.yaml → aws.account_id` | IAM policies, ECR URIs |
 | `aws_region` | `bootstrap-project.config.yaml → aws.region` | all AWS resource references |
 | `aws_profile` | `bootstrap-project.config.yaml → aws.profile` | deploy-time AWS CLI profile, exported by `bootstrap-infra.sh` |
-| `api_port` | `bootstrap-project.config.yaml → app.api_port` | Dockerfile (uvicorn + `AWS_LWA_PORT`) |
+| `dev_port_offset` | `bootstrap-project.config.yaml → app.dev_port_offset` | local dev ports (0-99, unique per app on a machine); derives `dev_fe_port` (7100+N), `dev_api_port` (7200+N), `dev_db_port` (7300+N), `dev_adminer_port` (7400+N) |
 | `python_version` | `bootstrap-project.config.yaml → python_version` | Dockerfile, pyproject.toml, GHA |
 | `node_version` | `bootstrap-project.config.yaml → node_version` | GHA workflows |
 | `pnpm_version` | `bootstrap-project.config.yaml → pnpm_version` | GHA workflows |

@@ -69,12 +69,12 @@ src/
 
 4. **Run the application**:
    ```bash
-   uv run uvicorn app.main:app --reload --app-dir src
+   uv run uvicorn app.main:app --reload --app-dir src --port <{{ dev_api_port }}>
    ```
 
 5. **View the API documentation**:
-   - OpenAPI docs: http://localhost:8000/docs
-   - ReDoc: http://localhost:8000/redoc
+   - OpenAPI docs: http://localhost:<{{ dev_api_port }}>/docs
+   - ReDoc: http://localhost:<{{ dev_api_port }}>/redoc
 
 6. **Run tests**:
    ```bash
@@ -207,7 +207,7 @@ Database connection string — set **one** of:
 ## Notes
 - We avoid `create_all()` at runtime; schema is owned by Alembic.
 - Tests create tables directly against an in-memory SQLite engine.
-- Adminer is available at http://localhost:8080 for quick DB inspection (when using docker-compose.local.yml).
+- Adminer is available at http://localhost:<{{ dev_adminer_port }}> for quick DB inspection (when using docker-compose.local.yml).
 
 ## License
 

@@ -5,8 +5,13 @@ import { setAuthenticated, clearAuth } from './auth/auth-slice'
 
 // Cross-origin data API: public Lambda Function URL, authenticated with a Bearer access
 // token. No cookies (credentials: 'omit') — the session cookie belongs to authApi's origin.
+// VITE_API_BASE has no fallback: dev gets it from .env.development, deploys from CI.
+if (!import.meta.env.VITE_API_BASE) {
+    throw new Error('VITE_API_BASE is not set')
+}
+
 const rawBaseQuery = fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_BASE || 'http://localhost:8000',
+    baseUrl: import.meta.env.VITE_API_BASE,
     credentials: 'omit',
     prepareHeaders: (headers, { getState }) => {
         const token = (getState() as { auth?: { accessToken?: string | null } }).auth?.accessToken

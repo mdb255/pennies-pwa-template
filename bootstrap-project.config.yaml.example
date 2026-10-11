@@ -2,12 +2,12 @@
 #
 # Kept in place after bootstrap runs — re-running this script re-reads it, and a resumed
 # /bootstrap run in an already-rendered project reads it too. All fields below except the
-# tool versions, api_port, lambda_memory and github_visibility are required; bootstrap-project.py
+# tool versions, lambda_memory and github_visibility are required; bootstrap-project.py
 # refuses to run with any of them missing or malformed rather than silently defaulting.
 
 app:
   name: my-app          # hyphens preferred — used in dir names, ECR repo, SSM paths
-  api_port: 8000
+  dev_port_offset: 0    # 0-99, unique per app on this machine. Local dev ports: frontend 7100+N, api 7200+N, postgres 7300+N, adminer 7400+N
 
 aws:
   account_id: "123456789012"

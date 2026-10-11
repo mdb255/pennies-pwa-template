@@ -5,7 +5,7 @@ declare module 'swiper/css'
 declare module 'swiper/css/pagination'
 
 interface ImportMetaEnv {
-    readonly VITE_API_BASE?: string
+    readonly VITE_API_BASE: string
 }
 
 interface ImportMeta {

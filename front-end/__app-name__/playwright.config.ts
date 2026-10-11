@@ -5,7 +5,7 @@ export default defineConfig({
     fullyParallel: true,
     reporter: 'html',
     use: {
-        baseURL: 'http://localhost:5173',
+        baseURL: 'http://localhost:<{{ dev_fe_port }}>',
         trace: 'on-first-retry',
     },
     projects: [
@@ -13,7 +13,7 @@ export default defineConfig({
     ],
     webServer: {
         command: 'pnpm run dev',
-        url: 'http://localhost:5173',
+        url: 'http://localhost:<{{ dev_fe_port }}>',
         reuseExistingServer: !process.env.CI,
     },
 })

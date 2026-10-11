@@ -9,8 +9,10 @@ export default defineConfig({
     // the local backend, so authApi's session cookie is first-party. Data calls go straight to
     // VITE_API_BASE (cross-origin, Bearer) and are not proxied.
     server: {
+        port: <{{ dev_fe_port }}>,
+        strictPort: true,
         proxy: {
-            '/auth': 'http://localhost:8000',
+            '/auth': 'http://localhost:<{{ dev_api_port }}>',
         },
     },
     plugins: [react(), tailwindcss(), VitePWA({

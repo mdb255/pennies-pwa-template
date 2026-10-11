@@ -11,7 +11,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt/extensions/lambda-adapter
 
 # Tell the adapter which port uvicorn listens on, and when the app is ready to serve.
-ENV AWS_LWA_PORT=<{{ api_port }}>
+ENV AWS_LWA_PORT=8000
 ENV AWS_LWA_READINESS_CHECK_PATH=/healthz
 
 # Copy dependency files
@@ -25,14 +25,14 @@ COPY src ./src
 RUN uv sync --frozen --no-dev
 
 # Expose port
-EXPOSE <{{ api_port }}>
+EXPOSE 8000
 
 # Run the application. Calls the venv's uvicorn directly rather than going through
 # `uv run`: uv wants a writable cache under $HOME at startup, and Lambda's filesystem is
 # read-only outside /tmp, so `uv run` exits 2 before uvicorn ever binds a port (the adapter
 # then reports Ready with nothing to proxy to, and every request 502s). The `uv sync` above
 # already installed everything into /app/.venv, so uv has no work to do at runtime anyway.
-CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "<{{ api_port }}>", "--app-dir", "src"]
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "src"]
 
 
 

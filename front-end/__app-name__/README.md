@@ -6,14 +6,10 @@ React + TypeScript + Ionic 8 PWA, built with Vite and pnpm.
 
 ```bash
 pnpm install
-pnpm dev          # dev server at http://localhost:5173
+pnpm dev          # dev server at http://localhost:<{{ dev_fe_port }}>
 ```
 
-Create a `.env.local` file (not committed) with:
-
-```
-VITE_API_BASE=http://localhost:8000
-```
+`VITE_API_BASE` (the backend origin for `dataApi`) comes from the committed `.env.development`, which Vite loads for `pnpm dev` only. Deployed builds set it from CI / `manual-deploy-frontend.sh`; there is no fallback, so a missing value throws at startup.
 
 ## Auth: two origins
 

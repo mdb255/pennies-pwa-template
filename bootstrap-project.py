@@ -85,6 +85,10 @@ def validate_config(c):
     if not name or not APP_NAME_RE.fullmatch(name):
         errors.append("app.name is required and must match ^[a-z][a-z0-9-]*$")
 
+    offset = app.get('dev_port_offset')
+    if isinstance(offset, bool) or not isinstance(offset, int) or not 0 <= offset <= 99:
+        errors.append("app.dev_port_offset is required and must be an integer 0-99 (unique per app on this machine)")
+
     account_id = aws.get('account_id')
     if not account_id or not ACCOUNT_ID_RE.fullmatch(str(account_id)):
         errors.append("aws.account_id is required and must be exactly 12 digits")
@@ -111,6 +115,7 @@ def build_context(c):
     name = c['app']['name']
     aws = c['aws']
     infra = c.get('infra', {})
+    offset = int(c['app']['dev_port_offset'])
     return {
         'app_name':          name,
         'app_name_snake':    name.replace('-', '_'),
@@ -119,7 +124,11 @@ def build_context(c):
         # Deploy-time profile — bootstrap-infra.sh exports this as AWS_PROFILE. Not used by
         # the running app; local dev auth is up to whatever's already active in your shell.
         'aws_profile':       aws.get('profile', 'default'),
-        'api_port':          str(c['app'].get('api_port', 8000)),
+        'dev_port_offset':   str(offset),
+        'dev_fe_port':       str(7100 + offset),
+        'dev_api_port':      str(7200 + offset),
+        'dev_db_port':       str(7300 + offset),
+        'dev_adminer_port':  str(7400 + offset),
         'python_version':    str(c.get('python_version', '3.12')),
         'node_version':      str(c.get('node_version', '24')),
         'pnpm_version':      str(c.get('pnpm_version', '11')),
